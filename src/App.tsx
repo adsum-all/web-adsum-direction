@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ApiError, type Session, getParticipationGlobal, getStatistiques } from "./api.js";
 import { BarChart, DonutChart, LineChart, StackedBar, type ChartDatum } from "./components/Charts.js";
 import { Login } from "./components/Login.js";
+import { useMarque } from "./useMarque.js";
 import { useResource } from "./useResource.js";
 
 // Persist the session across reloads so a refresh no longer logs the user out.
@@ -76,6 +77,7 @@ export function App(): JSX.Element {
 }
 
 function DirectionDashboard({ session, onLogout }: { session: Session; onLogout: () => void }): JSX.Element {
+  const marque = useMarque();
   // A revoked or expired token surfaces as a 401: clear the session and return
   // to the login screen cleanly, without a reload loop.
   const onExpired = useCallback(
@@ -113,10 +115,10 @@ function DirectionDashboard({ session, onLogout }: { session: Session; onLogout:
       <header className="topbar-app">
         <div className="brand">
           <span className="brand-logo" aria-hidden="true">
-            A
+            {marque.initiale}
           </span>
           <span className="brand-text">
-            ADSUM
+            {marque.marque}
             <span className="brand-sub">Direction</span>
           </span>
         </div>
@@ -134,7 +136,7 @@ function DirectionDashboard({ session, onLogout }: { session: Session; onLogout:
           <header className="page-head">
             <div>
               <h1>Pilotage de la direction</h1>
-              <p className="muted">Indicateurs consolidés, sur les données réelles du Sacerdoce Royal.</p>
+              <p className="muted">Indicateurs consolidés, sur les données réelles de {marque.organisation}.</p>
             </div>
             <span className="event-chip" title="Actualisation automatique toutes les 60 secondes">
               <span className="event-dot" aria-hidden="true" />
