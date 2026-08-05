@@ -1,0 +1,75 @@
+/*
+ * ADSUM design tokens - local fallback.
+ *
+ * The private @adsum/tokens package is not reachable from every environment.
+ * This file mirrors the semantic token surface consumed across styles.css and
+ * the components (colours, typography, radii, shadows, spacing scale).
+ * When the private package is available in a given environment it can be
+ * re-imported first and these values will simply be overridden.
+ */
+
+:root {
+  /* Base surfaces */
+  --adsum-bg: #f4f6fb;
+  --adsum-panel: #ffffff;
+  --adsum-board: #eef1f7;
+  --adsum-line: #e3e7f0;
+
+  /* Text */
+  --adsum-ink: #101427;
+  --adsum-ink2: #29304a;
+  --adsum-mut: #5b6480;
+  --adsum-faint: #8a92a8;
+
+  /* Brand + accents */
+  --adsum-brand-400: #5b82d8;
+  --adsum-brand-500: #3563c9;
+  --adsum-brand-600: #2a4fad;
+  --adsum-acc: #2a4fad;
+  --adsum-acc2: #1f8a5b;
+
+  /* Semantic status */
+  --adsum-ok: #1f8a5b;
+  --adsum-ok-bg: #e4f3ea;
+  --adsum-warn: #b5731a;
+  --adsum-warn-bg: #fdf1dd;
+  --adsum-danger: #c0392b;
+  --adsum-danger-bg: #fbe6e3;
+  --adsum-info: #2a4fad;
+  --adsum-info-bg: #e7ecf8;
+
+  /* Radii */
+  --adsum-radius-sm: 6px;
+  --adsum-radius-md: 10px;
+  --adsum-radius-lg: 14px;
+  --adsum-radius-xl: 20px;
+  --adsum-radius-pill: 999px;
+
+  /* Shadows */
+  --adsum-shadow-sm: 0 1px 2px rgba(16, 20, 39, 0.05), 0 1px 3px rgba(16, 20, 39, 0.04);
+  --adsum-shadow-md: 0 8px 24px rgba(16, 20, 39, 0.08);
+
+  /* Typography families */
+  --adsum-font-display: "InterDisplay", "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --adsum-font-ui: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --adsum-font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* Type scale */
+  --adsum-text-xs: 12px;
+  --adsum-text-sm: 13px;
+  --adsum-text-base: 14px;
+  --adsum-text-md: 16px;
+  --adsum-text-lg: 18px;
+  --adsum-text-xl: 22px;
+  --adsum-text-2xl: 26px;
+  --adsum-text-3xl: 32px;
+
+  /* Spacing scale (used ad hoc, kept for documentation) */
+  --adsum-space-1: 4px;
+  --adsum-space-2: 8px;
+  --adsum-space-3: 12px;
+  --adsum-space-4: 16px;
+  --adsum-space-5: 20px;
+  --adsum-space-6: 24px;
+  --adsum-space-8: 32px;
+}
