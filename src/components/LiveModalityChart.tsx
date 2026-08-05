@@ -1,5 +1,5 @@
 // Répartition sur place / en ligne pour UNE activité.
-// L'API ne donne pas la ventilation par activité — on la déduit en projetant
+// L'API ne donne pas la ventilation par activité - on la déduit en projetant
 // le ratio global (présentiel / en ligne) sur les présents de l'activité.
 // Le libellé indique explicitement qu'il s'agit d'une projection.
 

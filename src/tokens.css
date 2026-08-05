@@ -1,5 +1,5 @@
 /*
- * ADSUM design tokens — local fallback.
+ * ADSUM design tokens - local fallback.
  *
  * The private @adsum/tokens package is not reachable from every environment.
  * This file mirrors the semantic token surface consumed across styles.css and

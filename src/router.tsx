@@ -1,4 +1,4 @@
-// Minimal hash-based router — no dependency added.
+// Minimal hash-based router - no dependency added.
 // Reads window.location.hash and exposes navigate(). Persists via history.
 
 import { useCallback, useEffect, useState } from "react";

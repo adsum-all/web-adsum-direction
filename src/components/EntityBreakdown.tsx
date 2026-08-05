@@ -147,7 +147,7 @@ export function EntityBreakdown({
 }
 
 function RateBadge({ value, kind }: { value: number | null; kind: "assiduite" | "mobilisation" }): JSX.Element {
-  if (value === null) return <span className="rate-badge rate-na">—</span>;
+  if (value === null) return <span className="rate-badge rate-na">-</span>;
   const tone = value >= 75 ? "rate-good" : value >= 50 ? "rate-mid" : "rate-low";
   return (
     <span className={`rate-badge ${tone}`} title={kind === "assiduite" ? "Présents / pointages" : "(Présents + 0,5·Partiels) / pointages"}>

@@ -1,4 +1,4 @@
-// Organisation — hub à onglets : synthèse, commissions, tribus, coordinations,
+// Organisation - hub à onglets : synthèse, commissions, tribus, coordinations,
 // intendances, pays. Les référentiels sont chargés depuis l'API (fallback aux
 // listes statiques si le back ne les expose pas encore).
 
@@ -21,7 +21,7 @@ import {
 import { COMMISSIONS_MISSIONS, COORDINATIONS, INTENDANCES, TRIBUS } from "../modalities.js";
 
 type Named = { libelle?: string; nom?: string; code?: string };
-const nameOf = (x: Named) => x.libelle ?? x.nom ?? x.code ?? "—";
+const nameOf = (x: Named) => x.libelle ?? x.nom ?? x.code ?? "-";
 
 function useOrgLists(token: string) {
   const tribus = useResource(async () => {
@@ -99,7 +99,7 @@ function OverviewTab(): JSX.Element {
     .map((r) => ({ label: r.commission ?? "Sans commission", value: r.total }))
     .sort((a, b) => b.value - a.value), [data]);
   const cheminement = useMemo(() => (data?.par_cheminement ?? [])
-    .map((r) => ({ label: CHEMINEMENT_LABELS[r.cheminement] ?? r.cheminement ?? "—", value: r.total }))
+    .map((r) => ({ label: CHEMINEMENT_LABELS[r.cheminement] ?? r.cheminement ?? "-", value: r.total }))
     .sort((a, b) => b.value - a.value), [data]);
 
   return (
@@ -167,7 +167,7 @@ function ListTab({ res, label }: { res: ResourceState<Array<Named & { effectif?:
             {sorted.map((row, i) => (
               <tr key={`${nameOf(row)}-${i}`}>
                 <td>{nameOf(row)}</td>
-                <td style={{ textAlign: "right" }}>{row.effectif ?? "—"}</td>
+                <td style={{ textAlign: "right" }}>{row.effectif ?? "-"}</td>
               </tr>
             ))}
           </tbody>
@@ -208,9 +208,9 @@ function CoordinationsTab({ res }: { res: ResourceState<Coordination[]> }): JSX.
             {data.map((c, i) => (
               <tr key={`${nameOf(c)}-${i}`}>
                 <td>{nameOf(c)}</td>
-                <td>{c.continent ?? "—"}</td>
-                <td>{c.pays ?? "—"}</td>
-                <td style={{ textAlign: "right" }}>{c.effectif ?? "—"}</td>
+                <td>{c.continent ?? "-"}</td>
+                <td>{c.pays ?? "-"}</td>
+                <td style={{ textAlign: "right" }}>{c.effectif ?? "-"}</td>
               </tr>
             ))}
           </tbody>
@@ -252,9 +252,9 @@ function PaysTab({ res }: { res: ResourceState<Pays[]> }): JSX.Element {
             {data.map((p, i) => (
               <tr key={`${nameOf(p)}-${i}`}>
                 <td>{nameOf(p)}</td>
-                <td>{p.continent ?? "—"}</td>
-                <td>{p.code_iso ?? "—"}</td>
-                <td style={{ textAlign: "right" }}>{p.effectif ?? "—"}</td>
+                <td>{p.continent ?? "-"}</td>
+                <td>{p.code_iso ?? "-"}</td>
+                <td style={{ textAlign: "right" }}>{p.effectif ?? "-"}</td>
               </tr>
             ))}
           </tbody>

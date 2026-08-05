@@ -1,6 +1,6 @@
 // Lightweight, dependency-free SVG charts for the ADSUM back-office.
 // Colours follow the design system tokens (see src/tokens.css). Every chart is
-// rendered from real data passed by the caller — no synthetic series.
+// rendered from real data passed by the caller - no synthetic series.
 //
 // Every chart accepts optional `unit`, `legend`, and empty-state props so the
 // caller can describe what the axis represents without hardcoding it inside

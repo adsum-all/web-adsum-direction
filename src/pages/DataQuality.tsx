@@ -1,4 +1,4 @@
-// Qualité des données — complétude, vérification identité, fraîcheur.
+// Qualité des données - complétude, vérification identité, fraîcheur.
 
 import { ChartCard } from "../components/ChartCard.js";
 import { DonutChart, StackedBar } from "../components/Charts.js";
@@ -39,7 +39,7 @@ export function DataQualityPage(): JSX.Element {
       <div className="kpi-grid">
         <Kpi
           label="Taux de vérification"
-          value={verifRate === null ? "—" : `${verifRate}%`}
+          value={verifRate === null ? "-" : `${verifRate}%`}
           hint={`${verified.toLocaleString("fr-FR")} vérifiés / ${total.toLocaleString("fr-FR")}`}
           info={{
             measure: "Part des membres dont l'identité a été confirmée.",
@@ -49,7 +49,7 @@ export function DataQualityPage(): JSX.Element {
         <Kpi label="En attente" value={pending} hint="vérification à effectuer" />
         <Kpi
           label="Fraîcheur"
-          value={lastUpdate ? lastUpdate.toLocaleTimeString("fr-FR") : "—"}
+          value={lastUpdate ? lastUpdate.toLocaleTimeString("fr-FR") : "-"}
           hint="dernière synchronisation"
           info={{
             measure: "Horodatage de la dernière actualisation réussie côté navigateur.",
@@ -120,7 +120,7 @@ export function DataQualityPage(): JSX.Element {
               {pager.slice.map((m) => (
                 <li key={m.id}>
                   <span className="verify-matr">{m.matricule}</span>
-                  <span className="verify-name">{[m.prenoms, m.nom].filter(Boolean).join(" ") || "—"}</span>
+                  <span className="verify-name">{[m.prenoms, m.nom].filter(Boolean).join(" ") || "-"}</span>
                 </li>
               ))}
             </ul>

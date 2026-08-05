@@ -1,4 +1,4 @@
-// Vue d'ensemble — synthèse des indicateurs clés + accès direct à l'activité.
+// Vue d'ensemble - synthèse des indicateurs clés + accès direct à l'activité.
 
 import { useMemo, useState } from "react";
 
@@ -69,7 +69,7 @@ export function OverviewPage({ onNavigate }: { onNavigate: (r: RouteKey) => void
                 sparkline={sparklinePoints}
                 info={{
                   measure: "Nombre total de membres enregistrés dans l'annuaire.",
-                  formula: "COUNT(membres) — hors suppression logique.",
+                  formula: "COUNT(membres) - hors suppression logique.",
                   population: "Ensemble de l'annuaire du Sacerdoce Royal.",
                 }}
               />
@@ -149,7 +149,7 @@ export function OverviewPage({ onNavigate }: { onNavigate: (r: RouteKey) => void
                 <div><b>{liveEv.presents}</b><span>présents</span></div>
                 <div><b>{liveEv.partiels}</b><span>partiels</span></div>
                 <div><b>{liveEv.absents}</b><span>absents</span></div>
-                <div><b>{liveRate !== null ? `${liveRate}%` : "—"}</b><span>mobilisation</span></div>
+                <div><b>{liveRate !== null ? `${liveRate}%` : "-"}</b><span>mobilisation</span></div>
               </div>
               <button type="button" className="btn btn-primary btn-inline" onClick={() => onNavigate("live")}>
                 Ouvrir la page dédiée

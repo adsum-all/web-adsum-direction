@@ -1,4 +1,4 @@
-// Absences & motifs — volume d'absences global + placeholders explicites pour
+// Absences & motifs - volume d'absences global + placeholders explicites pour
 // les données que l'API n'expose pas encore (catégories de motifs, statut
 // excusé / non excusé). Neutralité statistique.
 
@@ -53,7 +53,7 @@ export function AbsencesPage(): JSX.Element {
         />
         <Kpi
           label="Taux d'absence brut"
-          value={tauxAbsence === null ? "—" : `${tauxAbsence}%`}
+          value={tauxAbsence === null ? "-" : `${tauxAbsence}%`}
           hint="absents / pointages"
           info={{
             measure: "Part d'absences sur l'ensemble des pointages enregistrés.",
@@ -62,7 +62,7 @@ export function AbsencesPage(): JSX.Element {
         />
         <Kpi
           label="Absences excusées"
-          value="—"
+          value="-"
           hint="qualification administrative"
           info={{
             measure: "Absences reconnues comme excusées après examen d'un responsable habilité.",
@@ -71,7 +71,7 @@ export function AbsencesPage(): JSX.Element {
         />
         <Kpi
           label="En attente d'examen"
-          value="—"
+          value="-"
           hint="qualification administrative"
           info={{
             measure: "Absences déclarées mais non encore qualifiées par un responsable.",
@@ -109,7 +109,7 @@ export function AbsencesPage(): JSX.Element {
           title="Motifs d'absence"
           info={{
             measure: "Répartition des raisons déclarées par les membres absents.",
-            limits: "Données non exposées par l'API — nécessite l'ajout du champ absence_reason_category.",
+            limits: "Données non exposées par l'API - nécessite l'ajout du champ absence_reason_category.",
           }}
         >
           <PendingDataState

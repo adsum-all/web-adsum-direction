@@ -20,7 +20,7 @@ export function Kpi({
   label, value, hint, accent, suffix, trend, trendComparisonLabel, sparkline, info,
 }: KpiProps): JSX.Element {
   const displayValue = value === undefined || value === null
-    ? "—"
+    ? "-"
     : typeof value === "number"
       ? `${value.toLocaleString("fr-FR")}${suffix ?? ""}`
       : value;

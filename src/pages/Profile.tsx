@@ -31,8 +31,8 @@ export function ProfilePage(): JSX.Element {
         <div className="section-head"><div className="section-title-row"><h2>Session</h2></div></div>
         <dl className="profile-dl">
           <div><dt>Jeton d'accès</dt><dd className="mono">{maskedToken}</dd></div>
-          <div><dt>Dernière synchronisation</dt><dd>{lastUpdate ? lastUpdate.toLocaleString("fr-FR") : "—"}</dd></div>
-          <div><dt>Périmètre</dt><dd>Consolidé — Sacerdoce Royal</dd></div>
+          <div><dt>Dernière synchronisation</dt><dd>{lastUpdate ? lastUpdate.toLocaleString("fr-FR") : "-"}</dd></div>
+          <div><dt>Périmètre</dt><dd>Consolidé - Sacerdoce Royal</dd></div>
         </dl>
         <div style={{ marginTop: 16 }}>
           <button type="button" className="btn btn-ghost btn-inline" onClick={onLogout}>

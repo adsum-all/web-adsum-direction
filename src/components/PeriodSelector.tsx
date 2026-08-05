@@ -1,6 +1,6 @@
 // Segmented period selector for the Direction dashboard.
 // Pure client-side filter applied to the monthly series already returned by
-// the API — no extra network calls, no debounce required.
+// the API - no extra network calls, no debounce required.
 
 import { useMemo } from "react";
 
@@ -93,7 +93,7 @@ interface SparklineProps {
   color?: string;
 }
 
-/** Compact SVG sparkline — no axes, meant to sit inside a KPI card. */
+/** Compact SVG sparkline - no axes, meant to sit inside a KPI card. */
 export function Sparkline({ points, width = 96, height = 28, color = "currentColor" }: SparklineProps): JSX.Element | null {
   if (points.length < 2) return null;
   const max = Math.max(1, ...points.map((p) => p.value));

@@ -1,4 +1,4 @@
-// Page Calendrier — véritable calendrier (mois par défaut, semaine, année).
+// Page Calendrier - véritable calendrier (mois par défaut, semaine, année).
 // Chaque cellule est cliquable et ouvre un panneau latéral (slide-over) avec le
 // détail des activités du jour puis le détail complet d'une activité.
 
@@ -186,7 +186,7 @@ function Grid({
             className={`cal-cell${out ? " is-out" : ""}${key === todayKey ? " is-today" : ""}${list.length ? " has-events" : ""}`}
             onClick={() => onPickDay(key)}
             onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onPickDay(key); } }}
-            aria-label={`${d.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })} — ${list.length} activité(s)`}
+            aria-label={`${d.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })} - ${list.length} activité(s)`}
           >
             <span className="cal-daynum">{d.getDate()}</span>
             <ul className="cal-events">
@@ -238,7 +238,7 @@ function YearView({ year, byDay, onPickDay }: { year: number; byDay: Map<string,
                     type="button"
                     className={`cal-mini-day${n ? " has-events" : ""}${key === todayKey ? " is-today" : ""}`}
                     onClick={() => onPickDay(key)}
-                    title={`${d.toLocaleDateString("fr-FR")} — ${n} activité(s)`}
+                    title={`${d.toLocaleDateString("fr-FR")} - ${n} activité(s)`}
                   >
                     {d.getDate()}
                   </button>
@@ -289,7 +289,7 @@ function DayDrawer({
               {items.map((ev) => (
                 <li key={ev.id}>
                   <button type="button" className="drawer-item" onClick={() => onSelectEvent(ev)}>
-                    <span className="drawer-item-time">{timeOf(ev) || "—"}</span>
+                    <span className="drawer-item-time">{timeOf(ev) || "-"}</span>
                     <span className="drawer-item-body">
                       <span className="drawer-item-title">{ev.titre || "Sans titre"}</span>
                       <span className="drawer-item-meta">{[ev.type, ev.volet, ev.lieu, ev.statut].filter(Boolean).join(" · ") || "Détails à venir"}</span>
@@ -305,12 +305,12 @@ function DayDrawer({
               <button type="button" className="drawer-back" onClick={() => onSelectEvent(null)}>‹ Toutes les activités du jour</button>
               <h3 className="drawer-detail-title">{event.titre || "Sans titre"}</h3>
               <dl className="detail-list">
-                <Row label="Début" value={event.debut ? new Date(event.debut).toLocaleString("fr-FR") : "—"} />
-                <Row label="Fin" value={event.fin ? new Date(event.fin).toLocaleString("fr-FR") : "—"} />
-                <Row label="Type" value={event.type ?? "—"} />
-                <Row label="Volet" value={event.volet ?? "—"} />
-                <Row label="Lieu" value={event.lieu ?? "—"} />
-                <Row label="Statut" value={event.statut ?? "—"} />
+                <Row label="Début" value={event.debut ? new Date(event.debut).toLocaleString("fr-FR") : "-"} />
+                <Row label="Fin" value={event.fin ? new Date(event.fin).toLocaleString("fr-FR") : "-"} />
+                <Row label="Type" value={event.type ?? "-"} />
+                <Row label="Volet" value={event.volet ?? "-"} />
+                <Row label="Lieu" value={event.lieu ?? "-"} />
+                <Row label="Statut" value={event.statut ?? "-"} />
                 {Object.entries(event)
                   .filter(([k, v]) => !HIDDEN_KEYS.has(k) && (typeof v === "string" || typeof v === "number" || typeof v === "boolean"))
                   .map(([k, v]) => <Row key={k} label={k.replace(/_/g, " ")} value={String(v)} />)}

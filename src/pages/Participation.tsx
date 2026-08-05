@@ -1,4 +1,4 @@
-// Participation — tendances, comparaisons, tableau paginé et répartition
+// Participation - tendances, comparaisons, tableau paginé et répartition
 // par entité (commission, tribu, coordination, intendance, pays, continent).
 
 import { useMemo, useState } from "react";
@@ -79,7 +79,7 @@ export function ParticipationPage(): JSX.Element {
       <div className="kpi-grid">
         <Kpi
           label="Taux d'assiduité global"
-          value={tauxAssiduite === null ? "—" : `${tauxAssiduite}%`}
+          value={tauxAssiduite === null ? "-" : `${tauxAssiduite}%`}
           hint="présents / pointages"
           accent
           info={{
@@ -89,7 +89,7 @@ export function ParticipationPage(): JSX.Element {
         />
         <Kpi
           label="Taux de mobilisation"
-          value={tauxMobilisation === null ? "—" : `${tauxMobilisation}%`}
+          value={tauxMobilisation === null ? "-" : `${tauxMobilisation}%`}
           hint="pondère les partiels à 0,5"
           info={{
             measure: "Vue lissée intégrant les présences partielles.",
@@ -103,7 +103,7 @@ export function ParticipationPage(): JSX.Element {
         />
         <Kpi
           label="Sur place / en ligne"
-          value={global ? `${global.presentiel.toLocaleString("fr-FR")} / ${global.en_ligne.toLocaleString("fr-FR")}` : "—"}
+          value={global ? `${global.presentiel.toLocaleString("fr-FR")} / ${global.en_ligne.toLocaleString("fr-FR")}` : "-"}
           hint="modalités confondues"
           info={{
             measure: "Répartition globale des présences par modalité.",
@@ -236,7 +236,7 @@ function ActivityDetailList({
                       <p className="event-card-title">{ev.titre}</p>
                       <p className="muted small">{ev.volet || "Volet non renseigné"}</p>
                     </div>
-                    <span className="event-card-rate">{rate !== null ? `${rate}%` : "—"}</span>
+                    <span className="event-card-rate">{rate !== null ? `${rate}%` : "-"}</span>
                   </header>
                   <StackedBar presents={ev.presents} partiels={ev.partiels} absents={ev.absents} />
                   <p className="event-card-meta">

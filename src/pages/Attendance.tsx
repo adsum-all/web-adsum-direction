@@ -1,4 +1,4 @@
-// Assiduité — distribution du cheminement, dynamique d'entrée et taux
+// Assiduité - distribution du cheminement, dynamique d'entrée et taux
 // d'assiduité par entité (commission, tribu, coordination, intendance…).
 
 import { useMemo } from "react";

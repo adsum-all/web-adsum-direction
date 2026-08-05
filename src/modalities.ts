@@ -60,7 +60,7 @@ export const EVENEMENTS_RECURRENTS = [
 
 /** Normalise une clé brute (slug, majuscules, accents) vers un libellé du référentiel. */
 export function normalizeLabel(raw: string | null | undefined, ref: readonly string[]): string {
-  if (!raw) return "—";
+  if (!raw) return "-";
   const norm = raw
     .toString()
     .normalize("NFD")

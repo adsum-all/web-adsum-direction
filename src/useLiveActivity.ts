@@ -13,7 +13,7 @@ export interface LiveSelection {
   reference: LiveEvent | null;
 }
 
-// The current API only exposes `debut` (start) — no end timestamp and no
+// The current API only exposes `debut` (start) - no end timestamp and no
 // status. We consider an activity "in progress" when it started within the
 // last 4 hours (typical worship-session duration). This heuristic will be
 // replaced once the backend exposes real state timestamps.
@@ -34,7 +34,7 @@ export function pickLiveActivity(events: readonly LiveEvent[] | undefined, now =
     .sort((a, b) => b.t - a.t);
 
   if (withTime.length === 0) {
-    // Fallback: no timestamps at all — take the first entry as reference.
+    // Fallback: no timestamps at all - take the first entry as reference.
     return { mode: "last", current: [events[0]!], reference: events[0]! };
   }
 

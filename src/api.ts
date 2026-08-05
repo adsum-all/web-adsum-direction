@@ -227,7 +227,7 @@ function normalizeRows(raw: unknown, ...labelKeys: string[]): EntityBreakdownRow
     .map((r: Record<string, unknown>) => {
       const label = keys.map((k) => r?.[k]).find((v) => typeof v === "string" && v) as string | undefined;
       return {
-        label: label ?? "—",
+        label: label ?? "-",
         presents: toNum(r?.presents ?? (r as Record<string, unknown>)["present"]),
         partiels: toNum(r?.partiels ?? (r as Record<string, unknown>)["partiel"]),
         absents: toNum(r?.absents ?? (r as Record<string, unknown>)["absent"]),

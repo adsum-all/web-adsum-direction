@@ -129,7 +129,7 @@ export function ArrivalsChart({ presents, partiels, startISO }: Props): JSX.Elem
         ))}
       </svg>
       <p className="modality-note">
-        Courbe indicative basée sur une distribution en cloche calibrée sur les totaux réels — remplacée dès que l'API exposera l'horodatage des pointages.
+        Courbe indicative basée sur une distribution en cloche calibrée sur les totaux réels - remplacée dès que l'API exposera l'horodatage des pointages.
       </p>
     </div>
   );

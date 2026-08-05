@@ -1,4 +1,4 @@
-// Activité en direct — page dédiée à UNE activité (en cours ou dernière).
+// Activité en direct - page dédiée à UNE activité (en cours ou dernière).
 // Bascule automatique dès qu'une nouvelle activité entre dans la fenêtre live.
 // Onglets si plusieurs activités simultanées.
 
@@ -158,7 +158,7 @@ export function LiveActivityPage(): JSX.Element {
                       info={{
                         measure: "Courbe cumulative des pointages sur le créneau de l'activité.",
                         formula: "Distribution en cloche calibrée sur les totaux réels (présents + partiels).",
-                        limits: "Projection indicative — sera remplacée par les horodatages exacts dès leur exposition par l'API.",
+                        limits: "Projection indicative - sera remplacée par les horodatages exacts dès leur exposition par l'API.",
                       }}
                     >
                       <ArrivalsChart
@@ -203,7 +203,7 @@ function LiveKpis({ event }: { event: LiveEvent }): JSX.Element {
       />
       <Kpi
         label="Taux de participation brut"
-        value={rateBrut === null ? "—" : `${rateBrut}%`}
+        value={rateBrut === null ? "-" : `${rateBrut}%`}
         hint="présents / pointages"
         info={{
           measure: "Part de membres présents sur l'ensemble des pointages.",
@@ -212,7 +212,7 @@ function LiveKpis({ event }: { event: LiveEvent }): JSX.Element {
       />
       <Kpi
         label="Taux de mobilisation"
-        value={rateMobilization === null ? "—" : `${rateMobilization}%`}
+        value={rateMobilization === null ? "-" : `${rateMobilization}%`}
         hint="pondère les partiels à 0,5"
         info={{
           measure: "Estimation lissée intégrant les présences partielles.",
