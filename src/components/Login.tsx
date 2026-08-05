@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { ApiError, type Session, getMesPermissions, login, loginVerify } from "../api.js";
+import { useMarque } from "../useMarque.js";
 
 interface LoginProps {
   onAuth: (session: Session) => void;
@@ -12,6 +13,7 @@ interface LoginProps {
 const REQUISE = "statistiques.consulter";
 
 export function Login({ onAuth }: LoginProps): JSX.Element {
+  const marque = useMarque();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
@@ -58,9 +60,9 @@ export function Login({ onAuth }: LoginProps): JSX.Element {
     <div className="auth">
       <form onSubmit={submit} className="auth-card">
         <div className="brand brand-lg">
-          <span className="brand-logo" aria-hidden="true">A</span>
+          <span className="brand-logo" aria-hidden="true">{marque.initiale}</span>
           <span className="brand-text">
-            ADSUM
+            {marque.marque}
             <span className="brand-sub">Direction</span>
           </span>
         </div>
@@ -124,7 +126,7 @@ export function Login({ onAuth }: LoginProps): JSX.Element {
             </p>
             <label>
               <span>Code de vérification</span>
-              <input type="text" inputMode="numeric" autoComplete="one-time-code" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))} required />
+              <input type="text" inputMode="numeric" autoComplete="one-time-code" value={code} onChange={(e) => setCode(e.target.value)} required />
             </label>
             <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
               <input type="checkbox" checked={faireConfiance} onChange={(e) => setFaireConfiance(e.target.checked)} />

@@ -10,10 +10,10 @@
     "lint": "tsc --noEmit",
     "test": "vitest run --passWithNoTests",
     "build": "vite build",
+    "build:dev": "vite build --mode development",
     "preview": "vite preview"
   },
   "dependencies": {
-    "@adsum/tokens": "^0.1.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
