@@ -261,7 +261,7 @@ export function OverviewPage({ onNavigate }: { onNavigate: (r: RouteKey) => void
 
       <ChartCard
         title="Activité en direct"
-        hint={live.mode === "live" ? "en cours" : live.mode === "last" ? "dernière activité" : "aucune"}
+        hint={live.mode === "live" ? "en cours" : live.mode === "last" ? "dernière activité" : live.mode === "planned" ? "à venir" : "aucune"}
         info={{
           measure: "Aperçu rapide de l'activité en cours ou de la dernière activité terminée.",
           formula: "Sélection = activité démarrée dans les 4 dernières heures, sinon la plus récente.",
@@ -274,17 +274,27 @@ export function OverviewPage({ onNavigate }: { onNavigate: (r: RouteKey) => void
           <div className="live-summary">
             <div>
               <span className={`live-pill live-pill-${live.mode}`}>
-                {live.mode === "live" ? "En cours" : "Dernière activité"}
+                {live.mode === "live" ? "En cours"
+                  : live.mode === "planned" ? "À venir" : "Dernière activité"}
               </span>
               <p className="live-summary-title">{liveEv.titre}</p>
               <p className="muted small">{liveEv.volet || "Volet non renseigné"}</p>
             </div>
-            <div className="live-stats">
-              <div><b>{liveEv.presents}</b><span>présents</span></div>
-              <div><b>{liveEv.partiels}</b><span>partiels</span></div>
-              <div><b>{liveEv.absents}</b><span>absents</span></div>
-              <div><b>{liveRate !== null ? `${liveRate}%` : "-"}</b><span>mobilisation</span></div>
-            </div>
+            {live.mode === "planned" ? (
+              // Zeros are not shown for something that has not happened: a row of
+              // zeros under a title reads as a failed activity, not as a diary entry.
+              <p className="muted small">
+                Activité programmée : aucun pointage n'est encore attendu.
+                Les chiffres apparaîtront une fois l'activité commencée.
+              </p>
+            ) : (
+              <div className="live-stats">
+                <div><b>{liveEv.presents}</b><span>présents</span></div>
+                <div><b>{liveEv.partiels}</b><span>partiels</span></div>
+                <div><b>{liveEv.absents}</b><span>absents</span></div>
+                <div><b>{liveRate !== null ? `${liveRate}%` : "-"}</b><span>mobilisation</span></div>
+              </div>
+            )}
             <button type="button" className="btn btn-primary btn-inline" onClick={() => onNavigate("live")}>
               Ouvrir la page dédiée
             </button>

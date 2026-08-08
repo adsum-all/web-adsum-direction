@@ -616,3 +616,11 @@
   .droits li { grid-template-columns: 100px 1fr; }
   .droits li .muted { grid-column: 1 / -1; }
 }
+
+/* A planned activity is announced, not scored: neutral rather than the live green. */
+.live-pill-planned { background: var(--adsum-info-bg); color: var(--adsum-info); }
+
+/* The heading used to carry a role name, which capitalising suited. It now carries
+   the account's address, and capitalising an email rewrites it: nobody's mailbox is
+   Saintgabrielsacerdoceroyal+Direction@Gmail.Com. */
+.profile-role { text-transform: none; overflow-wrap: anywhere; }
