@@ -624,3 +624,39 @@
    the account's address, and capitalising an email rewrites it: nobody's mailbox is
    Saintgabrielsacerdoceroyal+Direction@Gmail.Com. */
 .profile-role { text-transform: none; overflow-wrap: anywhere; }
+
+/* --- Décomposition du suivi ------------------------------------------------
+ *
+ * The count sits next to the percentage on every line, because the direction asked
+ * for it and because a share alone cannot say whether it describes three people or
+ * three hundred. The colours separate proof from assertion rather than decorate.
+ */
+
+.decomposition { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 8px; }
+
+.decomposition li {
+  display: grid;
+  grid-template-columns: minmax(190px, 1.6fr) 3fr 58px 64px;
+  align-items: center;
+  gap: 12px;
+  font-size: var(--adsum-text-sm, 13px);
+}
+
+.decomposition-label { color: var(--adsum-ink2); }
+.decomposition-piste { height: 10px; border-radius: var(--adsum-radius-pill); background: var(--adsum-board); overflow: hidden; }
+.decomposition-part { display: block; height: 100%; border-radius: inherit; transition: width 400ms cubic-bezier(0.22, 1, 0.36, 1); }
+
+/* Proof is the strong colour; a declaration is deliberately paler. */
+.decomposition-prouve { background: var(--adsum-ok); }
+.decomposition-declare { background: #8fbfa6; }
+.decomposition-complet { background: var(--adsum-acc); }
+.decomposition-partiel { background: #8ca4d8; }
+.decomposition-inconnue { background: var(--adsum-faint); }
+
+.decomposition-n { text-align: right; font-variant-numeric: tabular-nums; }
+.decomposition-pct { text-align: right; font-size: var(--adsum-text-xs, 12px); color: var(--adsum-faint); font-variant-numeric: tabular-nums; }
+
+@media (max-width: 720px) {
+  .decomposition li { grid-template-columns: 1fr 54px 60px; }
+  .decomposition-label { grid-column: 1 / -1; }
+}

@@ -38,8 +38,20 @@ export interface Synthese {
   partiels: number;
   absents: number;
   scannes: number;
+  /** People who followed, however they followed. The five buckets below sum to it. */
+  suivis: number;
+  presentiel_prouve: number;
+  presentiel_declare: number;
+  en_ligne_complet: number;
+  en_ligne_partiel: number;
+  suivi_modalite_inconnue: number;
+  /** Rows the old model cannot express. Excluded from every rate, counted here so
+   *  the exclusion is visible rather than silent. */
+  non_interpretables: number;
   taux_presence: number;
   taux_participation: number;
+  /** Share of the attendance that is evidence rather than assertion. */
+  taux_preuve: number;
   taux_couverture: number;
   moyenne_par_activite: number;
 }
@@ -49,13 +61,23 @@ export interface LigneRepartition {
   presents: number;
   partiels: number;
   absents: number;
+  /** Denominator of every rate here: excludes the uninterpretable rows. */
   total: number;
+  /** What the base actually holds, so a group made only of such rows is not empty. */
+  lignes: number;
   presentiel: number;
   en_ligne: number;
   scannes: number;
+  presentiel_prouve: number;
+  presentiel_declare: number;
+  en_ligne_complet: number;
+  en_ligne_partiel: number;
+  suivi_modalite_inconnue: number;
+  non_interpretables: number;
   taux_presence: number;
   taux_participation: number;
   taux_absence: number;
+  taux_preuve: number;
 }
 
 export interface Noeud extends LigneRepartition {
