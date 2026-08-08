@@ -16,6 +16,7 @@ import { useState } from "react";
 import { ExportBar } from "../components/ExportBar.js";
 import { FilterBar } from "../components/FilterBar.js";
 import { PageHeader } from "../components/PageHeader.js";
+import { Pagination } from "../components/Pagination.js";
 import { ErrorState, SkeletonChart } from "../components/States.js";
 import { useDirection } from "../DirectionContext.js";
 import { getSuiviMembres, type SuiviMembre } from "../directionApi.js";
@@ -37,7 +38,7 @@ const COHORTES: Record<SuiviMembre["cohorte"], { label: string; ton: string }> =
   donnees_insuffisantes: { label: "Trop peu de données", ton: "neutre" },
 };
 
-const PAR_PAGE = 50;
+
 
 function dateCourte(iso: string | null): string {
   if (!iso) return "Jamais";
@@ -53,12 +54,15 @@ export function MembersPage(): JSX.Element {
   const cle = JSON.stringify(filtres.filtres);
 
   const [tri, setTri] = useState("taux");
-  const [page, setPage] = useState(0);
+  // Offset and size rather than a page number: the size is the reader's choice, and
+  // deriving one from the other silently moves them when they change it.
+  const [decalage, setDecalage] = useState(0);
+  const [limite, setLimite] = useState(20);
   const [recherche, setRecherche] = useState("");
 
   const suivi = useResource(
-    () => getSuiviMembres(jeton, filtres.filtres, { tri, limite: PAR_PAGE, decalage: page * PAR_PAGE }),
-    [jeton, cle, tri, page],
+    () => getSuiviMembres(jeton, filtres.filtres, { tri, limite, decalage }),
+    [jeton, cle, tri, limite, decalage],
   );
 
   const membres = suivi.data?.membres ?? [];
@@ -69,7 +73,6 @@ export function MembersPage(): JSX.Element {
     : membres;
 
   const total = suivi.data?.total ?? 0;
-  const pages = Math.max(1, Math.ceil(total / PAR_PAGE));
 
   return (
     <>
@@ -95,7 +98,7 @@ export function MembersPage(): JSX.Element {
             <span>Trier par</span>
             <select
               id="suivi-tri" value={tri}
-              onChange={(e) => { setTri(e.target.value); setPage(0); }}
+              onChange={(e) => { setTri(e.target.value); setDecalage(0); }}
             >
               {TRIS.map((t) => <option key={t.cle} value={t.cle}>{t.label}</option>)}
             </select>
@@ -176,25 +179,12 @@ export function MembersPage(): JSX.Element {
                 </table>
               </div>
 
-              <div className="pagination">
-                <button
-                  type="button" className="btn btn-ghost btn-sm"
-                  disabled={page === 0}
-                  onClick={() => setPage((p) => Math.max(0, p - 1))}
-                >
-                  Précédent
-                </button>
-                <span className="muted small">
-                  Page {page + 1} sur {pages} - {total} membre{total > 1 ? "s" : ""} sur le périmètre
-                </span>
-                <button
-                  type="button" className="btn btn-ghost btn-sm"
-                  disabled={page + 1 >= pages}
-                  onClick={() => setPage((p) => p + 1)}
-                >
-                  Suivant
-                </button>
-              </div>
+              <Pagination
+                etat={{ decalage, limite, total }}
+                libelle="membre(s) sur le périmètre"
+                chargement={suivi.loading}
+                onChange={({ decalage: d, limite: l }) => { setDecalage(d); setLimite(l); }}
+              />
             </>
           )
         )}
