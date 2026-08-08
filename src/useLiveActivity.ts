@@ -5,7 +5,11 @@ import type { ParticipationGlobal } from "./api.js";
 
 export type LiveEvent = ParticipationGlobal["serie_evenements"][number];
 
-export type LiveMode = "live" | "last" | "empty";
+// "planned" is not a variant of "last". An activity that has not happened yet has
+// no attendance, and presenting it as the last one shows a headline of zero present,
+// zero absent, no mobilisation rate, which reads as a collapse rather than as a date
+// in the diary. The panel has to say which of the two it is.
+export type LiveMode = "live" | "last" | "planned" | "empty";
 
 export interface LiveSelection {
   mode: LiveMode;
@@ -43,8 +47,18 @@ export function pickLiveActivity(events: readonly LiveEvent[] | undefined, now =
     return { mode: "live", current: live.map((x) => x.ev), reference: live[0]!.ev };
   }
 
-  const last = withTime[0]!.ev;
-  return { mode: "last", current: [last], reference: last };
+  // The most recent activity that has actually started. Sorting alone put a date
+  // months away at the top, and the panel reported an empty future congress as the
+  // organisation's latest attendance.
+  const passees = withTime.filter((x) => x.t <= now);
+  if (passees.length > 0) {
+    const last = passees[0]!.ev;
+    return { mode: "last", current: [last], reference: last };
+  }
+
+  // Nothing has happened yet: the nearest activity ahead, announced as such.
+  const prochaine = withTime[withTime.length - 1]!.ev;
+  return { mode: "planned", current: [prochaine], reference: prochaine };
 }
 
 export function formatEventDate(iso: string | null): string {

@@ -46,12 +46,17 @@ export function AttendancePage(): JSX.Element {
 
       <div className="kpi-grid">
         <Kpi
-          label="Membres actifs"
+          // Named for what it counts, not for what it sounds like. Labelled "membres
+          // actifs" it read as the size of the organisation and contradicted the
+          // synthesis on the overview, which counts every approved active account.
+          // Two definitions under one word is how a dashboard loses its reader.
+          label="Cheminement actif"
           value={active}
-          hint={activeRate !== null ? `${activeRate}% de l'annuaire` : ""}
+          hint={activeRate !== null ? `${activeRate}% de l'annuaire renseigné` : ""}
           info={{
-            measure: "Membres dont le cheminement est reconnu comme actif.",
+            measure: "Membres dont le champ « cheminement » porte une valeur reconnue comme active.",
             formula: "membre_actif + responsable + en_accompagnement",
+            limits: "Ne compte que les membres dont le cheminement est renseigné : ce n'est pas l'effectif actif de la plateforme, qui figure en Vue d'ensemble.",
           }}
         />
         <Kpi
