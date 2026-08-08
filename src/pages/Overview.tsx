@@ -96,52 +96,90 @@ export function OverviewPage({ onNavigate }: { onNavigate: (r: RouteKey) => void
           ) : (
             <>
               <Kpi
-                label="Taux de présence"
-                value={s?.taux_presence}
-                suffix="%"
-                accent
-                hint={`${formatNombre(s?.presents ?? 0)} présences sur ${formatNombre(s?.observations ?? 0)} observations`}
-                info={{
-                  measure: "Part des observations où le membre était présent.",
-                  formula: "présents / (présents + partiels + absents) x 100",
-                  population: "Présences consolidées : pointage QR, pointage manuel, session en ligne et déclaration validée, dédupliqués par membre et par activité.",
-                  limits: "Un membre sans aucun enregistrement n'entre pas dans le calcul. Voir le taux de couverture.",
-                }}
-              />
-              <Kpi
                 label="Taux de suivi"
                 value={s?.taux_participation}
                 suffix="%"
-                hint={`${formatNombre(s?.partiels ?? 0)} suivis partiels inclus`}
+                accent
+                hint={`${formatNombre(s?.suivis ?? 0)} suivis sur ${formatNombre(s?.observations ?? 0)} observations`}
                 info={{
-                  measure: "Part des observations où le membre a suivi, totalement ou partiellement.",
-                  formula: "(présents + partiels) / observations x 100",
+                  measure: "Part des observations où la personne a suivi l'activité, en présentiel ou en ligne, complètement ou partiellement.",
+                  formula: "(présentiel confirmé + présentiel déclaré + en ligne complet + en ligne partiel) / observations x 100",
+                  population: "Une observation par membre et par activité, consolidée sur les deux sources de pointage. Un membre scanné qui répond aussi au sondage compte une seule fois.",
+                  limits: `Exclut ${formatNombre(s?.non_interpretables ?? 0)} enregistrement(s) antérieur(s) au nouveau modèle, dont le sens ne peut pas être établi. Un membre sans aucun enregistrement n'entre pas dans le calcul : voir le taux de couverture.`,
+                }}
+              />
+              <Kpi
+                label="Part prouvée au contrôle"
+                value={s?.taux_preuve}
+                suffix="%"
+                hint={`${formatNombre(s?.presentiel_prouve ?? 0)} présences scannées sur ${formatNombre(s?.suivis ?? 0)} suivis`}
+                info={{
+                  measure: "Part des suivis reposant sur un pointage QR ou manuel confirmé par l'équipe de contrôle, et non sur la déclaration du membre.",
+                  formula: "présentiel confirmé au contrôle / total des suivis x 100",
+                  limits: "Une part faible ne signifie pas que les chiffres sont faux : elle signifie qu'ils reposent sur la parole des membres plutôt que sur une preuve. Deux unités au même taux de suivi ne sont pas dans la même situation si l'une est prouvée et l'autre déclarée.",
                 }}
               />
               <Kpi
                 label="Taux de couverture"
                 value={s?.taux_couverture}
                 suffix="%"
-                hint={`${formatNombre(s?.membres_vus ?? 0)} membres observés sur ${formatNombre(s?.membres_actifs ?? 0)} actifs`}
+                hint={`${formatNombre(s?.membres_vus ?? 0)} membres observés sur ${formatNombre(s?.membres_actifs ?? 0)} du périmètre`}
                 info={{
-                  measure: "Part des membres actifs pour lesquels la plateforme détient au moins une observation sur le périmètre.",
-                  formula: "membres observés / membres actifs x 100",
-                  limits: "Une couverture basse rend les taux ci-dessus non représentatifs de l'ensemble.",
+                  measure: "Part des membres du périmètre pour lesquels la plateforme détient au moins une observation.",
+                  formula: "membres observés / membres actifs du périmètre x 100",
+                  limits: "Le dénominateur suit les filtres d'organisation (coordination, intendance, commission), pas les filtres de période : restreindre la fenêtre ne réduit pas l'effectif. Une couverture basse rend les taux ci-dessus non représentatifs.",
                 }}
               />
               <Kpi
-                label="Présence moyenne"
+                label="Suivis par activité"
                 value={s?.moyenne_par_activite}
-                hint={`${formatNombre(s?.activites ?? 0)} activités, dont ${formatNombre(s?.scannes ?? 0)} présences scannées`}
+                hint={`${formatNombre(s?.activites ?? 0)} activités sur le périmètre`}
                 info={{
-                  measure: "Nombre moyen de présents par activité sur le périmètre.",
+                  measure: "Nombre moyen de personnes présentes par activité.",
                   formula: "présents / nombre d'activités",
+                  limits: "Une moyenne sur peu d'activités varie fortement d'une activité à l'autre.",
                 }}
               />
             </>
           )}
         </div>
       </section>
+
+      {s && s.suivis > 0 && (
+        <section className="card" aria-label="Décomposition du suivi">
+          <h2 className="card-title">Comment les {formatNombre(s.suivis)} suivis se répartissent</h2>
+          <p className="muted small">
+            Les cinq lignes totalisent exactement le nombre de suivis affiché ci-dessus.
+            Une présence confirmée au contrôle et une présence déclarée par le membre sont
+            deux faits différents et ne sont jamais additionnées sans le dire.
+          </p>
+          <ul className="decomposition">
+            {[
+              { cle: "prouve", label: "Présentiel confirmé au contrôle", n: s.presentiel_prouve, aide: "Pointage QR ou manuel validé par un contrôleur. C'est la seule preuve de présence physique." },
+              { cle: "declare", label: "Présentiel déclaré par le membre", n: s.presentiel_declare, aide: "Le membre affirme être venu sur place. Non vérifié." },
+              { cle: "complet", label: "En ligne, suivi complet", n: s.en_ligne_complet, aide: "Le membre déclare avoir suivi l'activité en entier à distance." },
+              { cle: "partiel", label: "En ligne, suivi partiel", n: s.en_ligne_partiel, aide: "Le membre déclare avoir suivi une partie seulement. Le suivi partiel n'existe qu'en ligne." },
+              { cle: "inconnue", label: "Suivi, modalité non précisée", n: s.suivi_modalite_inconnue, aide: "La personne a suivi mais n'a pas indiqué comment." },
+            ].filter((x) => x.n > 0).map((x) => (
+              <li key={x.cle} title={x.aide}>
+                <span className="decomposition-label">{x.label}</span>
+                <span className="decomposition-piste" aria-hidden="true">
+                  <span className={`decomposition-part decomposition-${x.cle}`} style={{ width: `${(100 * x.n) / s.suivis}%` }} />
+                </span>
+                <strong className="decomposition-n">{formatNombre(x.n)}</strong>
+                <span className="decomposition-pct">{formatTaux((100 * x.n) / s.suivis)}</span>
+              </li>
+            ))}
+          </ul>
+          {s.non_interpretables > 0 && (
+            <p className="banner banner-warn small">
+              {formatNombre(s.non_interpretables)} enregistrement(s) antérieur(s) au nouveau modèle
+              sont exclus de tous les taux : leur sens ne peut pas être établi avec certitude.
+              Ils sont conservés en base et jamais réécrits.
+            </p>
+          )}
+        </section>
+      )}
 
       {s && s.taux_couverture < 60 && (
         <p className="banner banner-warn small">
