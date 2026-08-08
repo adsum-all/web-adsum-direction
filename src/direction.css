@@ -660,3 +660,39 @@
   .decomposition li { grid-template-columns: 1fr 54px 60px; }
   .decomposition-label { grid-column: 1 / -1; }
 }
+
+/* --- Pagination ------------------------------------------------------------
+ *
+ * The `.pagination` container already exists above; these style what goes inside it
+ * now that the page size is the reader's choice rather than a constant.
+ */
+
+.pagination-taille { display: flex; align-items: center; gap: 6px; color: var(--adsum-mut); font-size: var(--adsum-text-xs, 12px); }
+
+.pagination-taille select {
+  padding: 5px 8px;
+  border: 1px solid var(--adsum-line);
+  border-radius: var(--adsum-radius-sm);
+  background: var(--adsum-panel);
+  color: var(--adsum-ink);
+  font: inherit;
+  font-size: var(--adsum-text-xs, 12px);
+}
+
+.pagination-position { color: var(--adsum-mut); font-size: var(--adsum-text-xs, 12px); font-variant-numeric: tabular-nums; }
+.pagination-boutons { display: flex; align-items: center; gap: 6px; }
+
+.pagination-boutons button {
+  padding: 5px 11px;
+  border: 1px solid var(--adsum-line);
+  border-radius: var(--adsum-radius-sm);
+  background: var(--adsum-panel);
+  color: var(--adsum-ink2);
+  font: inherit;
+  font-size: var(--adsum-text-xs, 12px);
+  cursor: pointer;
+}
+
+.pagination-boutons button:hover:not(:disabled) { border-color: var(--adsum-acc); color: var(--adsum-acc); }
+.pagination-boutons button:disabled { opacity: 0.45; cursor: not-allowed; }
+.pagination-page { color: var(--adsum-mut); padding: 0 4px; font-size: var(--adsum-text-xs, 12px); font-variant-numeric: tabular-nums; }
