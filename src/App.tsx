@@ -15,6 +15,9 @@ import { OrganizationPage } from "./pages/Organization.js";
 import { AttendancePage } from "./pages/Attendance.js";
 import { DataQualityPage } from "./pages/DataQuality.js";
 import { ProfilePage } from "./pages/Profile.js";
+import { CrossingsPage } from "./pages/Crossings.js";
+import { HierarchyPage } from "./pages/Hierarchy.js";
+import { MembersPage } from "./pages/Members.js";
 
 const SESSION_KEY = "adsum.dir.token";
 
@@ -81,6 +84,9 @@ function PageContent({ route, onNavigate }: { route: RouteKey; onNavigate: (r: R
     case "absences": return <AbsencesPage />;
     case "organization": return <OrganizationPage />;
     case "attendance": return <AttendancePage />;
+    case "crossings": return <CrossingsPage />;
+    case "hierarchy": return <HierarchyPage />;
+    case "members": return <MembersPage />;
     case "quality": return <DataQualityPage />;
     case "profile": return <ProfilePage />;
     default: return <OverviewPage onNavigate={onNavigate} />;

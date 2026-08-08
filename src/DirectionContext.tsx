@@ -13,10 +13,14 @@ import {
   type Session,
   type Statistiques,
 } from "./api.js";
+import { useFiltres, type EtatFiltres } from "./useFiltres.js";
 import { useResource, type ResourceState } from "./useResource.js";
 
 interface Ctx {
   session: Session;
+  /** The filter set governing every analytical panel, held in the URL. Shared here
+   *  so two pages cannot disagree about what period the reader is looking at. */
+  filtres: EtatFiltres;
   stats: ResourceState<Statistiques>;
   participation: ResourceState<ParticipationGlobal>;
   lastUpdate: Date | null;
@@ -40,6 +44,7 @@ export function DirectionProvider({
     (err: unknown) => { if (err instanceof ApiError && err.status === 401) onLogout(); },
     [onLogout],
   );
+  const filtres = useFiltres();
   const stats = useResource(() => getStatistiques(session.token), [session.token], onExpired);
   const participation = useResource(() => getParticipationGlobal(session.token), [session.token], onExpired);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
@@ -63,13 +68,14 @@ export function DirectionProvider({
 
   const value = useMemo<Ctx>(() => ({
     session,
+    filtres,
     stats,
     participation,
     lastUpdate,
     isRefreshing: stats.loading || participation.loading,
     reloadAll,
     onLogout,
-  }), [session, stats, participation, lastUpdate, reloadAll, onLogout]);
+  }), [session, filtres, stats, participation, lastUpdate, reloadAll, onLogout]);
 
   return <DirectionContext.Provider value={value}>{children}</DirectionContext.Provider>;
 }
