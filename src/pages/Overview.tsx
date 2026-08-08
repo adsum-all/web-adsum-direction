@@ -163,8 +163,10 @@ export function OverviewPage({ onNavigate }: { onNavigate: (r: RouteKey) => void
           ? <SkeletonChart height={260} />
           : (
             <>
-              <TrendChart {...courbe} unite="%" maxForce={100} hauteur={260}
-                messageVide="Aucune activité sur le périmètre retenu." />
+              <div id="courbe-presence">
+                <TrendChart {...courbe} unite="%" maxForce={100} hauteur={260}
+                  messageVide="Aucune activité sur le périmètre retenu." />
+              </div>
               {points.length > 0 && (
                 <ExportBar
                   titre="Évolution de la présence"
@@ -174,6 +176,7 @@ export function OverviewPage({ onNavigate }: { onNavigate: (r: RouteKey) => void
                     String(p.partiels), String(p.absents), String(p.total), `${p.taux_presence} %`,
                   ])}
                   filtres={filtres.filtres}
+                  cibleImage={() => document.querySelector<SVGSVGElement>("#courbe-presence svg.graphe-svg")}
                 />
               )}
             </>
