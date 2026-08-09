@@ -17,7 +17,7 @@ import { formatEventDate, pickLiveActivity, type LiveEvent } from "../useLiveAct
 import { LiveBreakdownTab } from "./LiveBreakdownTab.js";
 
 export function LiveActivityPage(): JSX.Element {
-  const { participation, reloadAll, isRefreshing, lastUpdate } = useDirection();
+  const { participation, reloadAll, isRefreshing, lastUpdate, session } = useDirection();
   const selection = useMemo(
     () => pickLiveActivity(participation.data?.serie_evenements),
     [participation.data],
@@ -154,18 +154,14 @@ export function LiveActivityPage(): JSX.Element {
                     </div>
 
                     <ChartCard
-                      title="Évolution des arrivées"
+                      title="Arrivées, heure par heure"
                       info={{
-                        measure: "Courbe cumulative des pointages sur le créneau de l'activité.",
-                        formula: "Distribution en cloche calibrée sur les totaux réels (présents + partiels).",
-                        limits: "Projection indicative - sera remplacée par les horodatages exacts dès leur exposition par l'API.",
+                        measure: "Pointages cumulés d'après l'heure enregistrée à chaque passage, par tranches de quinze minutes autour du début.",
+                        formula: "Cumul des pointages horodatés / total des pointages horodatés. Aucune projection : seules les heures réellement enregistrées sont tracées.",
+                        limits: "Un pointage sans horodatage n'apparaît pas. Quand toutes les heures enregistrées sont identiques, la carte le dit au lieu de tracer une courbe sur un seul instant.",
                       }}
                     >
-                      <ArrivalsChart
-                        presents={currentEvent.presents}
-                        partiels={currentEvent.partiels}
-                        startISO={currentEvent.debut}
-                      />
+                      <ArrivalsChart token={session.token} evenementId={currentEvent.id} />
                     </ChartCard>
                   </>
                 ),

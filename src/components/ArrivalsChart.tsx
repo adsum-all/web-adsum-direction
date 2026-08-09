@@ -1,135 +1,144 @@
-// Courbe des arrivées cumulées pour une activité.
-// L'API n'expose pas encore l'horodatage des pointages. On simule une courbe
-// en cloche (avant → pendant → fin) calibrée sur les totaux réels, pour
-// donner un ordre de grandeur visuel. Le libellé signale la projection.
+// Arrivals over time for one activity, from the times that were actually recorded.
+//
+// This component used to draw a Gaussian calibrated on the total and label it
+// "indicative". That is a fabricated shape presented as a measurement: the reader saw
+// a smooth flow nobody had observed, peaking at fifty five percent of the slot because
+// that is where the formula put it. The times existed all along, on every recorded
+// entry; nothing was ever read.
+//
+// Where the recorded times carry no spread, the chart says so rather than drawing a
+// curve over a single instant. An empty statement is worth more than an invented one.
 
-interface Props {
-  presents: number;
-  partiels: number;
-  startISO: string | null;
-}
+import { useEffect, useState } from "react";
 
-const BINS = 16;
+import { getArrivees, type Arrivees } from "../directionApi.js";
 
-function bellShape(n: number): number[] {
-  // Densité gaussienne centrée à 55% du créneau, écart-type ~0.18
-  const mu = 0.55;
-  const sigma = 0.18;
-  const raw: number[] = [];
-  for (let i = 0; i < n; i++) {
-    const x = i / (n - 1);
-    const y = Math.exp(-((x - mu) ** 2) / (2 * sigma * sigma));
-    raw.push(y);
-  }
-  const sum = raw.reduce((a, b) => a + b, 0);
-  return raw.map((y) => y / sum);
-}
+const HAUTEUR = 200;
+const MARGE = { haut: 18, droite: 16, bas: 34, gauche: 44 };
 
-export function ArrivalsChart({ presents, partiels, startISO }: Props): JSX.Element {
-  const totalArrivals = presents + partiels;
-  if (totalArrivals === 0) {
+export function ArrivalsChart({
+  token,
+  evenementId,
+}: {
+  token: string;
+  evenementId: string;
+}): JSX.Element {
+  const [donnees, setDonnees] = useState<Arrivees | null>(null);
+  const [erreur, setErreur] = useState<string | null>(null);
+
+  useEffect(() => {
+    let vivant = true;
+    setDonnees(null);
+    setErreur(null);
+    void getArrivees(token, evenementId)
+      .then((d) => {
+        if (vivant) setDonnees(d);
+      })
+      .catch((e: unknown) => {
+        if (vivant) setErreur(e instanceof Error ? e.message : "Erreur réseau");
+      });
+    return () => {
+      vivant = false;
+    };
+  }, [token, evenementId]);
+
+  if (erreur) {
     return (
       <div className="chart-empty" role="status">
         <span className="chart-empty-dot" aria-hidden="true" />
-        <p>Aucun pointage enregistré : la courbe s'activera dès les premières arrivées.</p>
+        <p>{erreur}</p>
       </div>
     );
   }
 
-  const shape = bellShape(BINS);
-  const perBin = shape.map((p) => Math.round(p * totalArrivals));
-  // Ajuste l'arrondi pour retomber sur le total exact
-  const rounded = perBin.reduce((a, b) => a + b, 0);
-  if (rounded !== totalArrivals && perBin.length > 0) {
-    const mid = Math.floor(BINS / 2);
-    perBin[mid] = (perBin[mid] ?? 0) + (totalArrivals - rounded);
+  if (!donnees) {
+    return (
+      <div className="chart-empty" role="status">
+        <span className="chart-empty-dot" aria-hidden="true" />
+        <p>Lecture des horodatages...</p>
+      </div>
+    );
   }
-  const cumulative: number[] = [];
-  perBin.reduce((acc, v, i) => (cumulative[i] = acc + v), 0);
 
-  const width = 560;
-  const height = 200;
-  const padL = 40;
-  const padR = 14;
-  const padT = 18;
-  const padB = 30;
-  const plotW = width - padL - padR;
-  const plotH = height - padT - padB;
-  const maxY = cumulative[cumulative.length - 1] || 1;
-  const step = plotW / (BINS - 1);
+  if (!donnees.disponible) {
+    return (
+      <div className="chart-empty" role="status">
+        <span className="chart-empty-dot" aria-hidden="true" />
+        <p>{donnees.motif ?? "Pas d'étalement à représenter."}</p>
+      </div>
+    );
+  }
 
-  const start = startISO ? new Date(startISO) : null;
-  const durationMin = 120; // fenêtre standard 2h
-  const labelAt = (idx: number): string => {
-    if (!start) return `${Math.round((idx / (BINS - 1)) * 100)}%`;
-    const t = new Date(start.getTime() + (idx / (BINS - 1)) * durationMin * 60000);
-    return t.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
-  };
-
-  const coords = cumulative.map((v, i) => ({
-    x: padL + step * i,
-    y: padT + plotH * (1 - v / maxY),
-    v,
-    label: labelAt(i),
+  const tranches = donnees.tranches;
+  const total = donnees.total ?? tranches.reduce((n, x) => n + x.arrivees, 0);
+  const largeur = 560;
+  const traceL = largeur - MARGE.gauche - MARGE.droite;
+  const traceH = HAUTEUR - MARGE.haut - MARGE.bas;
+  const maxCumul = tranches[tranches.length - 1]?.cumul ?? 1;
+  const pas = tranches.length > 1 ? traceL / (tranches.length - 1) : 0;
+  const points = tranches.map((t, i) => ({
+    x: MARGE.gauche + i * pas,
+    y: MARGE.haut + traceH - (traceH * t.cumul) / (maxCumul || 1),
+    ...t,
   }));
-  const linePath = coords.map((c, i) => `${i === 0 ? "M" : "L"} ${c.x} ${c.y}`).join(" ");
-  const areaPath = `${linePath} L ${coords[coords.length - 1]!.x} ${padT + plotH} L ${coords[0]!.x} ${padT + plotH} Z`;
-
-  const barsMax = Math.max(...perBin, 1);
-  const barW = Math.max(step * 0.55, 6);
+  const trace = points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
+  const aire = `${trace} L ${points[points.length - 1]?.x ?? 0} ${MARGE.haut + traceH} L ${points[0]?.x ?? 0} ${MARGE.haut + traceH} Z`;
+  // One label every few buckets, never two overlapping, and always the last one: a
+  // curve whose right edge carries no time leaves the reader guessing where it ends.
+  const espacement = Math.max(1, Math.ceil(points.length / Math.max(2, Math.floor(traceL / 62))));
 
   return (
-    <div className="arrivals-wrap">
-      <div className="arrivals-legend">
-        <span><i className="arrivals-dot arrivals-bars" /> Arrivées par créneau (5 min)</span>
-        <span><i className="arrivals-dot arrivals-line" /> Cumul des présents</span>
-      </div>
+    <div>
       <svg
-        className="chart-svg"
-        viewBox={`0 0 ${width} ${height}`}
-        role="img"
-        aria-label={`Courbe d'arrivées, ${totalArrivals} pointages cumulés`}
+        viewBox={`0 0 ${largeur} ${HAUTEUR}`}
         preserveAspectRatio="xMidYMid meet"
+        className="chart-svg"
+        role="img"
+        aria-label={`Arrivées cumulées, ${donnees.total} pointages horodatés`}
       >
         <defs>
-          <linearGradient id="arrivals-area" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#5b82d8" stopOpacity={0.32} />
-            <stop offset="100%" stopColor="#5b82d8" stopOpacity={0.02} />
+          <linearGradient id="arrivees-aire" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#2a4fad" stopOpacity="0.24" />
+            <stop offset="100%" stopColor="#2a4fad" stopOpacity="0.02" />
           </linearGradient>
         </defs>
-        {[0, 0.25, 0.5, 0.75, 1].map((f, i) => {
-          const y = padT + plotH * (1 - f);
-          const v = Math.round(maxY * f);
+
+        {[0, 0.25, 0.5, 0.75, 1].map((p) => {
+          const y = MARGE.haut + traceH - traceH * p;
           return (
-            <g key={i}>
-              <line x1={padL} x2={width - padR} y1={y} y2={y} className="grid-line" />
-              <text x={padL - 6} y={y + 3.5} textAnchor="end" className="axis-num">{v}</text>
+            <g key={p}>
+              <line x1={MARGE.gauche} x2={largeur - MARGE.droite} y1={y} y2={y} className="chart-grid" />
+              <text x={MARGE.gauche - 6} y={y + 3.5} textAnchor="end" className="axis-num">
+                {Math.round(maxCumul * p)}
+              </text>
             </g>
           );
         })}
-        {perBin.map((v, i) => {
-          const h = (v / barsMax) * plotH * 0.6;
-          const x = padL + step * i - barW / 2;
-          const y = padT + plotH - h;
-          return v > 0 ? (
-            <rect key={i} x={x} y={y} width={barW} height={h} rx={2} fill="#c9d5f2">
-              <title>{`${labelAt(i)} : ${v} arrivée${v > 1 ? "s" : ""}`}</title>
-            </rect>
-          ) : null;
-        })}
-        <path d={areaPath} fill="url(#arrivals-area)" />
-        <path d={linePath} fill="none" stroke="#2a4fad" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" />
-        {coords.map((c, i) => (
-          i % 3 === 0 || i === coords.length - 1 ? (
-            <g key={i}>
-              <circle cx={c.x} cy={c.y} r={3} fill="#fff" stroke="#2a4fad" strokeWidth={1.6} />
-              <text x={c.x} y={height - 10} textAnchor="middle" className="bar-cat">{c.label}</text>
-            </g>
-          ) : null
+
+        <path d={aire} fill="url(#arrivees-aire)" />
+        <path d={trace} fill="none" stroke="#2a4fad" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" />
+
+        {points.map((p, i) => (
+          <g key={p.minutes}>
+            <title>{`${p.libelle} : ${p.arrivees} arrivée(s), ${p.cumul} au total (${p.part_cumulee} %)`}</title>
+            <circle cx={p.x} cy={p.y} r={3} fill="#fff" stroke="#2a4fad" strokeWidth={1.6} />
+            {(i % espacement === 0 || i === points.length - 1) && (
+              <text
+                x={p.x}
+                y={HAUTEUR - 10}
+                textAnchor={i === 0 ? "start" : i === points.length - 1 ? "end" : "middle"}
+                className="bar-cat"
+              >
+                {p.libelle}
+              </text>
+            )}
+          </g>
         ))}
       </svg>
       <p className="modality-note">
-        Courbe indicative basée sur une distribution en cloche calibrée sur les totaux réels - remplacée dès que l'API exposera l'horodatage des pointages.
+        Arrivées cumulées d&apos;après l&apos;heure enregistrée à chaque pointage, par
+        tranches de quinze minutes autour du début de l&apos;activité. {total} pointage
+        {total > 1 ? "s" : ""} horodaté{total > 1 ? "s" : ""}.
       </p>
     </div>
   );
