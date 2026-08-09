@@ -116,7 +116,16 @@ export function apiBaseUrl(): string {
 export interface ParticipationGlobal {
   nb_evenements: number;
   repartition_globale: { presents: number; partiels: number; absents: number; presentiel: number; en_ligne: number };
-  serie_evenements: { id: string; titre: string; debut: string | null; volet: string; presents: number; partiels: number; absents: number }[];
+  serie_evenements: {
+    id: string; titre: string; debut: string | null; volet: string;
+    /** Followed, by any channel. presentiel + en_ligne = suivis. */
+    suivis: number;
+    /** On site: what "présence" means, and nothing else. */
+    presentiel: number;
+    /** Followed online without coming. */
+    en_ligne: number;
+    presents: number; partiels: number; absents: number;
+  }[];
 }
 
 export async function getParticipationGlobal(token: string): Promise<ParticipationGlobal> {
