@@ -172,6 +172,19 @@ interface BarProps {
  * Falls back to a horizontal layout when the caller asks for it (used for
  * long category labels or by the donut fallback path).
  */
+/** Shorten without cutting a word in half.
+ *
+ * A fixed character count produced "Commissio." for "Commission Jeunesse", which names
+ * nothing. Cutting at the last space keeps a word the reader recognises; the SVG title
+ * always carries the full text.
+ */
+function raccourcir(texte: string, limite: number): string {
+  if (texte.length <= limite) return texte;
+  const coupe = texte.slice(0, limite);
+  const espace = coupe.lastIndexOf(" ");
+  return `${(espace > limite * 0.5 ? coupe.slice(0, espace) : coupe).trimEnd()}...`;
+}
+
 export function BarChart({
   items,
   height = 240,
@@ -266,9 +279,9 @@ export function BarChart({
         const h = (it.value / max) * plot;
         const x = padLeft + slot * i + (slot - barW) / 2;
         const y = padTop + plot - h;
-        const short = rotateLabels
-          ? (it.label.length > 22 ? `${it.label.slice(0, 21)}…` : it.label)
-          : (it.label.length > 10 ? `${it.label.slice(0, 9)}.` : it.label);
+        // Cut at a word boundary: "Commission Jeunesse" became "Commissio.", which
+        // identifies nothing. The full label stays in the hover title either way.
+        const short = raccourcir(it.label, rotateLabels ? 22 : barW < 54 ? 9 : 14);
         const cx = x + barW / 2;
         const labelY = rotateLabels ? height - 8 : height - 12;
         return (
@@ -281,7 +294,9 @@ export function BarChart({
             <text
               x={cx}
               y={labelY}
-              textAnchor={rotateLabels ? "end" : "middle"}
+              textAnchor={
+                rotateLabels ? "end" : i === 0 ? "start" : i === grouped.length - 1 ? "end" : "middle"
+              }
               className="bar-cat"
               transform={rotateLabels ? `rotate(-35 ${cx} ${labelY})` : undefined}
             >
@@ -421,9 +436,9 @@ export function StackedBar({ presents, partiels, absents, height = 10 }: {
 export function PresenceLegend(): JSX.Element {
   return (
     <div className="legend" aria-hidden="true">
-      <span><i style={{ background: "var(--adsum-ok)" }} /> Présents</span>
-      <span><i style={{ background: "var(--adsum-warn)" }} /> Partiels</span>
-      <span><i style={{ background: "var(--adsum-danger)" }} /> Absents</span>
+      <span><i style={{ background: "var(--adsum-ok)" }} /> Venus sur place</span>
+      <span><i style={{ background: "var(--adsum-warn)" }} /> Ont suivi à distance</span>
+      <span><i style={{ background: "var(--adsum-danger)" }} /> N&apos;ont pas suivi</span>
     </div>
   );
 }
