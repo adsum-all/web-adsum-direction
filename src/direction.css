@@ -1,0 +1,714 @@
+/*
+ * Styles for the analytical surface: filters, charts, cross-tabs, trees, exports.
+ *
+ * Built on the semantic tokens in tokens.css rather than on literal colours, so an
+ * installation that rebrands the platform rebrands these panels with it. A chart
+ * hard-coded to the default blue would be the one element still showing the previous
+ * client's identity.
+ *
+ * Loaded after styles.css and additive: nothing here redefines an existing class.
+ */
+
+/* --- Utilities ----------------------------------------------------------- */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.btn-sm { padding: 5px 10px; font-size: var(--adsum-text-xs, 12px); }
+
+.texte-ok { color: var(--adsum-ok); }
+.texte-alerte { color: var(--adsum-danger); }
+
+.badge-compteur {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  margin-left: 6px;
+  padding: 0 5px;
+  border-radius: var(--adsum-radius-pill);
+  background: var(--adsum-acc);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* --- Segmented control ---------------------------------------------------- */
+
+.segmente {
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid var(--adsum-line);
+  border-radius: var(--adsum-radius-md);
+  background: var(--adsum-board);
+  gap: 2px;
+  flex-wrap: wrap;
+}
+
+.segmente-item {
+  border: 0;
+  border-radius: calc(var(--adsum-radius-md) - 3px);
+  background: transparent;
+  color: var(--adsum-mut);
+  padding: 6px 12px;
+  font: inherit;
+  font-size: var(--adsum-text-xs, 12px);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.segmente-item:hover { color: var(--adsum-ink); }
+
+.segmente-item.est-actif {
+  background: var(--adsum-panel);
+  color: var(--adsum-ink);
+  font-weight: 600;
+  box-shadow: var(--adsum-shadow-sm);
+}
+
+/* --- Filter bar ----------------------------------------------------------- */
+
+.filtres {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  border: 1px solid var(--adsum-line);
+  border-radius: var(--adsum-radius-lg);
+  background: var(--adsum-panel);
+  box-shadow: var(--adsum-shadow-sm);
+}
+
+.filtres-tete {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.filtres-chips { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; margin: 0; padding: 0; }
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  border: 1px solid var(--adsum-line);
+  border-radius: var(--adsum-radius-pill);
+  background: var(--adsum-info-bg);
+  color: var(--adsum-ink2);
+  font: inherit;
+  font-size: var(--adsum-text-xs, 12px);
+  cursor: pointer;
+}
+
+.chip:hover { border-color: var(--adsum-danger); color: var(--adsum-danger); }
+
+.filtres-grille {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  padding-top: 6px;
+  border-top: 1px solid var(--adsum-line);
+}
+
+.filtres-grille label,
+.table-barre label,
+.croisement-axes label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: var(--adsum-text-xs, 12px);
+  color: var(--adsum-mut);
+}
+
+.filtres-grille select, .filtres-grille input,
+.table-barre select, .table-barre input,
+.croisement-axes select {
+  padding: 7px 9px;
+  border: 1px solid var(--adsum-line);
+  border-radius: var(--adsum-radius-sm);
+  background: var(--adsum-panel);
+  color: var(--adsum-ink);
+  font: inherit;
+  font-size: var(--adsum-text-sm, 13px);
+}
+
+.filtres-grille select:disabled { color: var(--adsum-faint); background: var(--adsum-board); }
+
+.table-barre {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.table-barre .export { margin-left: auto; }
+
+/* --- Charts --------------------------------------------------------------- */
+
+.graphe { position: relative; }
+
+.graphe-svg { width: 100%; height: auto; display: block; overflow: visible; }
+
+.graphe-grille { stroke: var(--adsum-line); stroke-width: 1; vector-effect: non-scaling-stroke; }
+
+.graphe-axe { fill: var(--adsum-faint); font-size: 11px; font-variant-numeric: tabular-nums; }
+
+.graphe-reticule {
+  stroke: var(--adsum-mut);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  vector-effect: non-scaling-stroke;
+}
+
+/* The curve draws itself in on first paint. Short and once: the point is to lead the
+   eye along the series, not to make the reader wait for their figures. */
+.graphe-trace {
+  stroke-dasharray: 2000;
+  stroke-dashoffset: 0;
+  animation: graphe-tracer 900ms ease-out 1;
+}
+
+@keyframes graphe-tracer {
+  from { stroke-dashoffset: 2000; }
+  to { stroke-dashoffset: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .graphe-trace { animation: none; }
+}
+
+.graphe-infobulle {
+  position: absolute;
+  top: 6px;
+  min-width: 170px;
+  /* Never wider than the chart, and long titles wrap instead of pushing the box out
+     of the card. An activity name can be forty characters. */
+  max-width: min(300px, 92%);
+  padding: 9px 11px;
+  border: 1px solid var(--adsum-line);
+  border-radius: var(--adsum-radius-md);
+  background: var(--adsum-panel);
+  box-shadow: var(--adsum-shadow-md);
+  pointer-events: none;
+  z-index: 3;
+}
+
+.graphe-infobulle-titre { margin: 0; font-size: var(--adsum-text-sm, 13px); font-weight: 600; color: var(--adsum-ink); overflow-wrap: anywhere; }
+.graphe-infobulle-date { margin: 2px 0 6px; font-size: 11px; color: var(--adsum-faint); }
+.graphe-infobulle ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; }
+.graphe-infobulle li { display: flex; align-items: center; gap: 7px; font-size: 12px; }
+.graphe-infobulle-label { color: var(--adsum-mut); overflow-wrap: anywhere; }
+.graphe-infobulle-valeur { margin-left: auto; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+.graphe-puce { width: 9px; height: 9px; border-radius: 3px; flex: none; }
+.graphe-puce-pointille { opacity: 0.55; }
+
+.graphe-legende {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  font-size: var(--adsum-text-xs, 12px);
+  color: var(--adsum-mut);
+}
+
+.graphe-legende li { display: flex; align-items: center; gap: 6px; }
+
+.graphe-vide {
+  margin: 0;
+  padding: 34px 16px;
+  text-align: center;
+  color: var(--adsum-faint);
+  background: var(--adsum-board);
+  border-radius: var(--adsum-radius-md);
+  font-size: var(--adsum-text-sm, 13px);
+}
+
+/* --- Cross-tab ------------------------------------------------------------ */
+
+.croisement-axes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.croisement-barre {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.croisement-barre .muted { margin: 0; }
+
+/* The matrix scrolls inside its own box so a wide cross-tab never pushes the page
+   sideways. */
+.croisement-defilement, .tableau-defilement, .apercu-defilement {
+  overflow-x: auto;
+  border: 1px solid var(--adsum-line);
+  border-radius: var(--adsum-radius-md);
+}
+
+.croisement-table, .tableau {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--adsum-text-sm, 13px);
+}
+
+.croisement-table th, .croisement-table td,
+.tableau th, .tableau td {
+  padding: 8px 11px;
+  border-bottom: 1px solid var(--adsum-line);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.croisement-table thead th, .tableau thead th {
+  position: sticky;
+  top: 0;
+  background: var(--adsum-board);
+  color: var(--adsum-ink2);
+  font-weight: 600;
+  z-index: 1;
+}
+
+.croisement-table td {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  transition: filter 120ms ease;
+}
+
+.croisement-table tbody th {
+  position: sticky;
+  left: 0;
+  background: var(--adsum-panel);
+  font-weight: 500;
+  max-width: 210px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  z-index: 1;
+}
+
+.croisement-table td:hover { filter: brightness(0.94); }
+
+.croisement-coin { display: flex; flex-direction: column; line-height: 1.25; }
+.croisement-coin-l { font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--adsum-faint); }
+.croisement-coin-c { font-weight: 600; }
+
+.croisement-marge { background: var(--adsum-board); font-weight: 600; }
+.croisement-total { color: var(--adsum-acc); }
+.croisement-table tfoot td, .croisement-table tfoot th { border-top: 2px solid var(--adsum-line); }
+
+/* --- Ranked bars ---------------------------------------------------------- */
+
+.classement-barre {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.classement-legende, .classement-liste { list-style: none; margin: 0; padding: 0; }
+
+.classement-legende {
+  display: flex;
+  gap: 13px;
+  flex-wrap: wrap;
+  font-size: var(--adsum-text-xs, 12px);
+  color: var(--adsum-mut);
+}
+
+.classement-legende li { display: flex; align-items: center; gap: 6px; }
+
+.pastille { width: 9px; height: 9px; border-radius: 3px; flex: none; }
+.pastille-present { background: var(--adsum-ok); }
+.pastille-partiel { background: var(--adsum-warn); }
+.pastille-absent { background: var(--adsum-line); }
+.pastille-inconnu { background: var(--adsum-faint); }
+.pastille-marqueur { background: var(--adsum-acc); border-radius: 1px; width: 3px; height: 12px; }
+
+.classement-liste { display: grid; gap: 7px; }
+
+.classement-ligne {
+  display: grid;
+  grid-template-columns: minmax(110px, 1.5fr) 4fr 66px 56px;
+  align-items: center;
+  gap: 12px;
+}
+
+.classement-nom {
+  font-size: var(--adsum-text-sm, 13px);
+  color: var(--adsum-ink2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.classement-piste { position: relative; height: 20px; background: var(--adsum-board); border-radius: var(--adsum-radius-sm); }
+
+.classement-barre-empilee {
+  position: absolute;
+  inset: 0 auto 0 0;
+  display: flex;
+  border-radius: var(--adsum-radius-sm);
+  overflow: hidden;
+  transition: width 400ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.seg { display: block; height: 100%; }
+.seg-present { background: var(--adsum-ok); }
+.seg-partiel { background: var(--adsum-warn); }
+.seg-absent { background: #cfd6e4; }
+.seg-inconnu { background: var(--adsum-faint); }
+
+/* The rate marker sits on the bar rather than beside it, so volume and rate are read
+   in one glance instead of two. */
+.classement-marqueur {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 3px;
+  border-radius: 1px;
+  background: var(--adsum-acc);
+  box-shadow: 0 0 0 1px var(--adsum-panel);
+}
+
+.classement-taux { font-size: var(--adsum-text-sm, 13px); font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
+.classement-taux.est-fragile { color: var(--adsum-warn); }
+.classement-taux abbr { text-decoration: none; cursor: help; }
+.classement-total { font-size: var(--adsum-text-xs, 12px); color: var(--adsum-faint); text-align: right; font-variant-numeric: tabular-nums; }
+
+@media (max-width: 720px) {
+  .classement-ligne { grid-template-columns: 1fr 60px 50px; }
+  .classement-nom { grid-column: 1 / -1; }
+}
+
+/* --- Trees ---------------------------------------------------------------- */
+
+.arbre { list-style: none; margin: 0; padding: 0 0 0 18px; }
+.arbre-item > .arbre { border-left: 1px solid var(--adsum-line); }
+
+.arbre-noeud {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 8px;
+  border-radius: var(--adsum-radius-sm);
+  flex-wrap: wrap;
+}
+
+.arbre-noeud:hover { background: var(--adsum-board); }
+
+.arbre-bascule {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--adsum-line);
+  border-radius: var(--adsum-radius-sm);
+  background: var(--adsum-panel);
+  color: var(--adsum-mut);
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.arbre-puce { width: 20px; height: 20px; flex: none; position: relative; }
+.arbre-puce::after {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  background: var(--adsum-line);
+}
+
+.arbre-nom { font-size: var(--adsum-text-sm, 13px); color: var(--adsum-ink); font-weight: 500; }
+.arbre-nom.est-vacant { color: var(--adsum-warn); font-style: italic; font-weight: 400; }
+.arbre-role { font-size: var(--adsum-text-xs, 12px); color: var(--adsum-mut); }
+
+.arbre-mesures { margin-left: auto; display: flex; align-items: center; gap: 11px; }
+.arbre-mesure .arbre-noeud-mesure { border-bottom: 1px solid var(--adsum-line); border-radius: 0; }
+
+/* --- Gauges, labels ------------------------------------------------------- */
+
+.jauge {
+  display: inline-block;
+  width: 62px;
+  height: 6px;
+  margin-left: 8px;
+  border-radius: var(--adsum-radius-pill);
+  background: var(--adsum-board);
+  overflow: hidden;
+  vertical-align: middle;
+}
+
+.jauge-large { width: 120px; }
+
+.jauge-remplie {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--adsum-acc);
+  transition: width 400ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.mesure-taux { font-variant-numeric: tabular-nums; font-weight: 600; }
+
+.etiquette {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: var(--adsum-radius-pill);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.etiquette-ok { background: var(--adsum-ok-bg); color: var(--adsum-ok); }
+.etiquette-info { background: var(--adsum-info-bg); color: var(--adsum-info); }
+.etiquette-warn { background: var(--adsum-warn-bg); color: var(--adsum-warn); }
+.etiquette-danger { background: var(--adsum-danger-bg); color: var(--adsum-danger); }
+.etiquette-neutre { background: var(--adsum-board); color: var(--adsum-mut); }
+
+.tableau td { font-variant-numeric: tabular-nums; }
+.tableau tbody th { font-weight: 500; color: var(--adsum-ink); }
+.tableau .cellule-texte { white-space: normal; color: var(--adsum-mut); font-size: var(--adsum-text-xs, 12px); }
+.tableau tbody tr:hover { background: var(--adsum-board); }
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+/* --- Export dialog -------------------------------------------------------- */
+
+.export { display: inline-block; }
+
+.modale { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 20px; }
+.modale-fond { position: absolute; inset: 0; background: rgba(16, 20, 39, 0.44); }
+
+.modale-corps {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(980px, 100%);
+  max-height: 88vh;
+  border-radius: var(--adsum-radius-lg);
+  background: var(--adsum-panel);
+  box-shadow: var(--adsum-shadow-md);
+  overflow: hidden;
+}
+
+.modale-tete, .modale-pied {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  flex-wrap: wrap;
+}
+
+.modale-tete { border-bottom: 1px solid var(--adsum-line); }
+.modale-tete h2 { margin: 0; font-size: var(--adsum-text-md, 15px); }
+.modale-pied { border-top: 1px solid var(--adsum-line); background: var(--adsum-board); }
+
+.btn-icone {
+  margin-left: auto;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: var(--adsum-radius-sm);
+  background: transparent;
+  color: var(--adsum-mut);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.btn-icone:hover { background: var(--adsum-line); color: var(--adsum-ink); }
+
+.apercu { padding: 18px; overflow: auto; }
+.apercu-titre { margin: 0 0 4px; font-size: var(--adsum-text-md, 15px); }
+.apercu-meta { margin: 0 0 3px; font-size: var(--adsum-text-xs, 12px); color: var(--adsum-mut); }
+.apercu-defilement { margin-top: 12px; max-height: 46vh; overflow: auto; }
+
+.modale-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.modale-envoi { display: flex; align-items: flex-end; gap: 8px; margin-left: auto; flex-wrap: wrap; }
+.modale-envoi label { display: flex; flex-direction: column; gap: 4px; font-size: var(--adsum-text-xs, 12px); color: var(--adsum-mut); }
+.modale-envoi input {
+  padding: 7px 9px;
+  border: 1px solid var(--adsum-line);
+  border-radius: var(--adsum-radius-sm);
+  background: var(--adsum-panel);
+  color: var(--adsum-ink);
+  font: inherit;
+  font-size: var(--adsum-text-sm, 13px);
+  min-width: 210px;
+}
+
+.modale-pied .small { flex-basis: 100%; margin: 0; }
+
+/* --- Assiduity cohorts ----------------------------------------------------- */
+
+.cohortes { list-style: none; margin: 0 0 10px; padding: 0; display: grid; gap: 8px; }
+
+.cohortes li {
+  display: grid;
+  grid-template-columns: minmax(120px, 1.4fr) 3fr 42px 58px;
+  align-items: center;
+  gap: 10px;
+}
+
+.cohorte-label { font-size: var(--adsum-text-sm, 13px); color: var(--adsum-ink2); }
+
+.cohorte-piste {
+  height: 9px;
+  border-radius: var(--adsum-radius-pill);
+  background: var(--adsum-board);
+  overflow: hidden;
+}
+
+.cohorte-remplie {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  transition: width 420ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.cohorte-valeur { font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
+.cohorte-part { font-size: var(--adsum-text-xs, 12px); color: var(--adsum-faint); text-align: right; font-variant-numeric: tabular-nums; }
+
+/* --- Rights list ----------------------------------------------------------- */
+
+.droits { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 8px; }
+
+.droits li {
+  display: grid;
+  grid-template-columns: 104px minmax(140px, auto) 1fr;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--adsum-line);
+}
+
+.droits li.est-refuse { opacity: 0.62; }
+.droits-cle { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; color: var(--adsum-ink2); }
+
+@media (max-width: 640px) {
+  .droits li { grid-template-columns: 100px 1fr; }
+  .droits li .muted { grid-column: 1 / -1; }
+}
+
+/* A planned activity is announced, not scored: neutral rather than the live green. */
+.live-pill-planned { background: var(--adsum-info-bg); color: var(--adsum-info); }
+
+/* The heading used to carry a role name, which capitalising suited. It now carries
+   the account's address, and capitalising an email rewrites it: nobody's mailbox is
+   Saintgabrielsacerdoceroyal+Direction@Gmail.Com. */
+.profile-role { text-transform: none; overflow-wrap: anywhere; }
+
+/* --- Décomposition du suivi ------------------------------------------------
+ *
+ * The count sits next to the percentage on every line, because the direction asked
+ * for it and because a share alone cannot say whether it describes three people or
+ * three hundred. The colours separate proof from assertion rather than decorate.
+ */
+
+.decomposition { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 8px; }
+
+.decomposition li {
+  display: grid;
+  grid-template-columns: minmax(190px, 1.6fr) 3fr 58px 64px;
+  align-items: center;
+  gap: 12px;
+  font-size: var(--adsum-text-sm, 13px);
+}
+
+.decomposition-label { color: var(--adsum-ink2); }
+.decomposition-piste { height: 10px; border-radius: var(--adsum-radius-pill); background: var(--adsum-board); overflow: hidden; }
+.decomposition-part { display: block; height: 100%; border-radius: inherit; transition: width 400ms cubic-bezier(0.22, 1, 0.36, 1); }
+
+/* Proof is the strong colour; a declaration is deliberately paler. */
+.decomposition-prouve { background: var(--adsum-ok); }
+.decomposition-declare { background: #8fbfa6; }
+.decomposition-complet { background: var(--adsum-acc); }
+.decomposition-partiel { background: #8ca4d8; }
+.decomposition-inconnue { background: var(--adsum-faint); }
+
+.decomposition-n { text-align: right; font-variant-numeric: tabular-nums; }
+.decomposition-pct { text-align: right; font-size: var(--adsum-text-xs, 12px); color: var(--adsum-faint); font-variant-numeric: tabular-nums; }
+
+@media (max-width: 720px) {
+  .decomposition li { grid-template-columns: 1fr 54px 60px; }
+  .decomposition-label { grid-column: 1 / -1; }
+}
+
+/* --- Pagination ------------------------------------------------------------
+ *
+ * The `.pagination` container already exists above; these style what goes inside it
+ * now that the page size is the reader's choice rather than a constant.
+ */
+
+.pagination-taille { display: flex; align-items: center; gap: 6px; color: var(--adsum-mut); font-size: var(--adsum-text-xs, 12px); }
+
+.pagination-taille select {
+  padding: 5px 8px;
+  border: 1px solid var(--adsum-line);
+  border-radius: var(--adsum-radius-sm);
+  background: var(--adsum-panel);
+  color: var(--adsum-ink);
+  font: inherit;
+  font-size: var(--adsum-text-xs, 12px);
+}
+
+.pagination-position { color: var(--adsum-mut); font-size: var(--adsum-text-xs, 12px); font-variant-numeric: tabular-nums; }
+.pagination-boutons { display: flex; align-items: center; gap: 6px; }
+
+.pagination-boutons button {
+  padding: 5px 11px;
+  border: 1px solid var(--adsum-line);
+  border-radius: var(--adsum-radius-sm);
+  background: var(--adsum-panel);
+  color: var(--adsum-ink2);
+  font: inherit;
+  font-size: var(--adsum-text-xs, 12px);
+  cursor: pointer;
+}
+
+.pagination-boutons button:hover:not(:disabled) { border-color: var(--adsum-acc); color: var(--adsum-acc); }
+.pagination-boutons button:disabled { opacity: 0.45; cursor: not-allowed; }
+.pagination-page { color: var(--adsum-mut); padding: 0 4px; font-size: var(--adsum-text-xs, 12px); font-variant-numeric: tabular-nums; }
+
+/* The ranking grid has two fixed numeric columns; below this width they push the
+   label out of the card instead of shrinking. The label moves onto its own line. */
+@media (max-width: 720px) {
+  .classement-ligne {
+    grid-template-columns: 1fr 58px 50px;
+    grid-template-areas: "nom nom nom" "piste total taux";
+    row-gap: 4px;
+  }
+  .classement-nom { grid-area: nom; }
+  .classement-piste { grid-area: piste; }
+}

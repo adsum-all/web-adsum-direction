@@ -1,22 +1,27 @@
 // Lightweight, dependency-free SVG charts for the ADSUM back-office.
-// Colours follow the design system (@adsum/tokens) brand palette. Every chart is
-// rendered from real data passed by the caller; there is no synthetic series here.
+// Colours follow the design system tokens (see src/tokens.css). Every chart is
+// rendered from real data passed by the caller - no synthetic series.
+//
+// Every chart accepts optional `unit`, `legend`, and empty-state props so the
+// caller can describe what the axis represents without hardcoding it inside
+// the component. Tooltips are backed by native <title> for accessibility and
+// hover discovery.
 
-import { useId } from "react";
+import { useId, useMemo } from "react";
 
 export const CHART_PALETTE = [
   "#2a4fad",
   "#5b82d8",
-  "#8aa8e6",
   "#1f8a5b",
-  "#b6791b",
+  "#b5731a",
+  "#8aa8e6",
   "#c0392b",
-  "#676b73",
+  "#5b6480",
   "#223f8a",
 ];
 
 const BRAND = "#2a4fad";
-const BRAND_LIGHT = "#3563c9";
+const BRAND_LIGHT = "#5b82d8";
 
 export interface ChartDatum {
   label: string;
@@ -25,6 +30,10 @@ export interface ChartDatum {
 
 function formatNumber(value: number): string {
   return value.toLocaleString("fr-FR");
+}
+
+function withUnit(value: number, unit?: string): string {
+  return unit ? `${formatNumber(value)} ${unit}` : formatNumber(value);
 }
 
 /** Round a raw step up to a readable value: 1, 2, 2.5 or 5 times a power of ten. */
@@ -42,11 +51,6 @@ function niceStep(rough: number): number {
   return step < 1 ? 1 : step;
 }
 
-/**
- * Build a readable Y scale from the raw maximum of a series. The maximum is
- * rounded up to a clean value and never drops below 1, so an all-zero series
- * still renders with a visible, honest scale instead of a squashed line.
- */
 function buildScale(rawMax: number, divisions = 4): { max: number; ticks: number[] } {
   const step = niceStep(Math.max(rawMax, 1) / divisions);
   const max = Math.max(step, Math.ceil(Math.max(rawMax, 1) / step) * step);
@@ -55,7 +59,6 @@ function buildScale(rawMax: number, divisions = 4): { max: number; ticks: number
   return { max, ticks };
 }
 
-/** Elegant empty state shared by every chart. */
 function ChartEmpty({ message }: { message: string }): JSX.Element {
   return (
     <div className="chart-empty" role="status">
@@ -67,15 +70,18 @@ function ChartEmpty({ message }: { message: string }): JSX.Element {
 
 interface DonutProps {
   segments: ChartDatum[];
-  /** Text shown in the centre of the ring (defaults to the total). */
   centerLabel?: string;
   size?: number;
+  unit?: string;
+  emptyMessage?: string;
 }
 
 /**
  * Donut chart with a centred total and an aligned legend (value + share).
+ * When the number of segments exceeds 6 we degrade gracefully to a horizontal
+ * bar chart, which stays readable where a donut would turn into confetti.
  */
-export function DonutChart({ segments, centerLabel, size = 168 }: DonutProps): JSX.Element {
+export function DonutChart({ segments, centerLabel, size = 168, unit, emptyMessage }: DonutProps): JSX.Element {
   const total = segments.reduce((acc, s) => acc + s.value, 0);
   const radius = size / 2;
   const stroke = size * 0.16;
@@ -84,7 +90,12 @@ export function DonutChart({ segments, centerLabel, size = 168 }: DonutProps): J
   let offset = 0;
 
   if (total === 0) {
-    return <ChartEmpty message="Aucune donnée à afficher pour le moment." />;
+    return <ChartEmpty message={emptyMessage ?? "Aucune donnée à afficher pour le moment."} />;
+  }
+
+  if (segments.length > 6) {
+    const sorted = [...segments].sort((a, b) => b.value - a.value);
+    return <BarChart items={sorted} unit={unit} orientation="horizontal" />;
   }
 
   return (
@@ -95,7 +106,7 @@ export function DonutChart({ segments, centerLabel, size = 168 }: DonutProps): J
         height={size}
         viewBox={`0 0 ${size} ${size}`}
         role="img"
-        aria-label={`Répartition : ${segments.map((s) => `${s.label} ${s.value}`).join(", ")}`}
+        aria-label={`Répartition : ${segments.map((s) => `${s.label} ${withUnit(s.value, unit)}`).join(", ")}`}
       >
         <g transform={`rotate(-90 ${radius} ${radius})`}>
           <circle cx={radius} cy={radius} r={inner} fill="none" className="donut-track" strokeWidth={stroke} />
@@ -113,7 +124,9 @@ export function DonutChart({ segments, centerLabel, size = 168 }: DonutProps): J
                 strokeWidth={stroke}
                 strokeDasharray={`${dash} ${circumference - dash}`}
                 strokeDashoffset={-offset}
-              />
+              >
+                <title>{`${s.label} : ${withUnit(s.value, unit)} (${Math.round((100 * s.value) / total)}%)`}</title>
+              </circle>
             );
             offset += dash;
             return seg;
@@ -144,34 +157,87 @@ interface BarProps {
   items: ChartDatum[];
   height?: number;
   emptyMessage?: string;
+  unit?: string;
+  /** Vertical (default) or horizontal bars. Horizontal handles long labels better. */
+  orientation?: "vertical" | "horizontal";
+  /** When more categories than this exist, group the tail into "Autres". */
+  topN?: number;
+  /** For vertical charts: rotate category labels by 35° for readability. */
+  rotateLabels?: boolean;
 }
 
+
 /**
- * Vertical bar chart with a real Y axis: readable rounded maximum, grid lines
- * with values, a value label on each bar and truncated category labels.
+ * Bar chart with a readable Y axis, tooltip on each bar and safe truncation.
+ * Falls back to a horizontal layout when the caller asks for it (used for
+ * long category labels or by the donut fallback path).
  */
-export function BarChart({ items, height = 240, emptyMessage }: BarProps): JSX.Element {
+export function BarChart({
+  items,
+  height = 240,
+  emptyMessage,
+  unit,
+  orientation = "vertical",
+  topN = 8,
+  rotateLabels = false,
+}: BarProps): JSX.Element {
+
   const gradId = `bar-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
-  if (items.length === 0) {
+  const grouped = useMemo(() => {
+    if (items.length <= topN) return items;
+    const sorted = [...items].sort((a, b) => b.value - a.value);
+    const head = sorted.slice(0, topN - 1);
+    const tail = sorted.slice(topN - 1);
+    const rest = tail.reduce((acc, r) => acc + r.value, 0);
+    return rest > 0 ? [...head, { label: "Autres", value: rest }] : head;
+  }, [items, topN]);
+
+  if (grouped.length === 0) {
     return <ChartEmpty message={emptyMessage ?? "Aucune donnée à afficher pour le moment."} />;
   }
-  const rawMax = Math.max(0, ...items.map((i) => i.value));
+
+  if (orientation === "horizontal") {
+    const rawMax = Math.max(0, ...grouped.map((i) => i.value));
+    const { max } = buildScale(rawMax);
+    return (
+      <div className="bars" role="list">
+        {grouped.map((it) => {
+          const pct = (it.value / max) * 100;
+          return (
+            <div className="bar-row" key={it.label} role="listitem">
+              <span className="bar-label" title={it.label}>{it.label}</span>
+              <div className="bar-track" aria-label={`${it.label} : ${withUnit(it.value, unit)}`}>
+                <div
+                  className="bar-fill"
+                  style={{ width: `${Math.max(pct, it.value > 0 ? 1.5 : 0)}%` }}
+                />
+              </div>
+              <span className="bar-value">{formatNumber(it.value)}</span>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  const rawMax = Math.max(0, ...grouped.map((i) => i.value));
   const { max, ticks } = buildScale(rawMax);
-  const width = Math.max(items.length * 64, 380);
+  const width = Math.max(grouped.length * 64, 380);
   const padLeft = 46;
   const padRight = 14;
   const padTop = 20;
-  const padBottom = 32;
+  const padBottom = rotateLabels ? 60 : 34;
   const plot = height - padBottom - padTop;
-  const slot = (width - padLeft - padRight) / items.length;
+  const slot = (width - padLeft - padRight) / grouped.length;
   const barW = Math.min(40, slot * 0.55);
+
 
   return (
     <svg
       className="chart-svg"
       viewBox={`0 0 ${width} ${height}`}
       role="img"
-      aria-label={`Histogramme : ${items.map((i) => `${i.label} ${i.value}`).join(", ")}`}
+      aria-label={`Histogramme : ${grouped.map((i) => `${i.label} ${withUnit(i.value, unit)}`).join(", ")}`}
       preserveAspectRatio="xMidYMid meet"
     >
       <defs>
@@ -191,23 +257,39 @@ export function BarChart({ items, height = 240, emptyMessage }: BarProps): JSX.E
           </g>
         );
       })}
-      {items.map((it, i) => {
+      {unit && (
+        <text x={padLeft - 8} y={padTop - 6} textAnchor="end" className="axis-unit">
+          {unit}
+        </text>
+      )}
+      {grouped.map((it, i) => {
         const h = (it.value / max) * plot;
         const x = padLeft + slot * i + (slot - barW) / 2;
         const y = padTop + plot - h;
-        const short = it.label.length > 10 ? `${it.label.slice(0, 9)}.` : it.label;
+        const short = rotateLabels
+          ? (it.label.length > 22 ? `${it.label.slice(0, 21)}…` : it.label)
+          : (it.label.length > 10 ? `${it.label.slice(0, 9)}.` : it.label);
+        const cx = x + barW / 2;
+        const labelY = rotateLabels ? height - 8 : height - 12;
         return (
-          <g key={`${it.label}-${i}`}>
-            <title>{`${it.label} : ${formatNumber(it.value)}`}</title>
+          <g key={`${it.label}-${i}`} tabIndex={0} className="chart-focusable">
+            <title>{`${it.label} : ${withUnit(it.value, unit)}`}</title>
             <rect x={x} y={y} width={barW} height={Math.max(h, it.value > 0 ? 2 : 0)} rx={4} fill={`url(#${gradId})`} />
-            <text x={x + barW / 2} y={y - 6} textAnchor="middle" className="bar-num">
+            <text x={cx} y={y - 6} textAnchor="middle" className="bar-num">
               {formatNumber(it.value)}
             </text>
-            <text x={x + barW / 2} y={height - 10} textAnchor="middle" className="bar-cat">
+            <text
+              x={cx}
+              y={labelY}
+              textAnchor={rotateLabels ? "end" : "middle"}
+              className="bar-cat"
+              transform={rotateLabels ? `rotate(-35 ${cx} ${labelY})` : undefined}
+            >
               {short}
             </text>
           </g>
         );
+
       })}
     </svg>
   );
@@ -217,14 +299,15 @@ interface LineProps {
   points: ChartDatum[];
   height?: number;
   emptyMessage?: string;
+  unit?: string;
 }
 
 /**
- * Area line chart for a time series (e.g. monthly entries). The Y scale is
- * rounded to a readable maximum (never below 1, so an all-zero year is not
- * squashed), grid lines carry their values and every point shows its value.
+ * Area line chart for a time series. The Y scale is rounded to a readable
+ * maximum (never below 1, so an all-zero year is not squashed), grid lines
+ * carry their values and every point shows its value.
  */
-export function LineChart({ points, height = 240, emptyMessage }: LineProps): JSX.Element {
+export function LineChart({ points, height = 240, emptyMessage, unit }: LineProps): JSX.Element {
   const gradId = `line-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   if (points.length === 0) {
     return <ChartEmpty message={emptyMessage ?? "Aucune donnée sur la période."} />;
@@ -258,7 +341,7 @@ export function LineChart({ points, height = 240, emptyMessage }: LineProps): JS
       className="chart-svg"
       viewBox={`0 0 ${width} ${height}`}
       role="img"
-      aria-label={`Courbe : ${points.map((p) => `${p.label} ${p.value}`).join(", ")}`}
+      aria-label={`Courbe : ${points.map((p) => `${p.label} ${withUnit(p.value, unit)}`).join(", ")}`}
       preserveAspectRatio="xMidYMid meet"
     >
       <defs>
@@ -278,11 +361,16 @@ export function LineChart({ points, height = 240, emptyMessage }: LineProps): JS
           </g>
         );
       })}
+      {unit && (
+        <text x={padLeft - 8} y={padTop - 6} textAnchor="end" className="axis-unit">
+          {unit}
+        </text>
+      )}
       <path d={areaPath} fill={`url(#${gradId})`} />
       <path d={linePath} fill="none" stroke={BRAND} strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" />
       {coords.map((c, i) => (
-        <g key={`${c.label}-${i}`}>
-          <title>{`${c.label} : ${formatNumber(c.value)}`}</title>
+        <g key={`${c.label}-${i}`} tabIndex={0} className="chart-focusable">
+          <title>{`${c.label} : ${withUnit(c.value, unit)}`}</title>
           <circle cx={c.x} cy={c.y} r={3.5} fill="#fff" stroke={BRAND} strokeWidth={2} />
           {showValues && (
             <text x={c.x} y={c.y - 10} textAnchor="middle" className="point-num">
@@ -309,12 +397,33 @@ export function StackedBar({ presents, partiels, absents, height = 10 }: {
 }): JSX.Element {
   const total = Math.max(1, presents + partiels + absents);
   const seg = (n: number, color: string, label: string) =>
-    n > 0 ? <div title={`${label} : ${n}`} style={{ width: `${(100 * n) / total}%`, background: color }} /> : null;
+    n > 0 ? (
+      <div
+        key={label}
+        title={`${label} : ${formatNumber(n)} (${Math.round((100 * n) / total)}%)`}
+        style={{ width: `${(100 * n) / total}%`, background: color }}
+      />
+    ) : null;
   return (
-    <div style={{ display: "flex", height, borderRadius: 6, overflow: "hidden", background: "var(--adsum-line)" }}>
+    <div
+      className="stacked-bar"
+      role="img"
+      aria-label={`Présents ${presents}, partiels ${partiels}, absents ${absents}`}
+      style={{ display: "flex", height, borderRadius: 6, overflow: "hidden", background: "var(--adsum-line)" }}
+    >
       {seg(presents, "var(--adsum-ok)", "Présents")}
-      {seg(partiels, "var(--adsum-warn, #b5731a)", "Partiels")}
+      {seg(partiels, "var(--adsum-warn)", "Partiels")}
       {seg(absents, "var(--adsum-danger)", "Absents")}
+    </div>
+  );
+}
+
+export function PresenceLegend(): JSX.Element {
+  return (
+    <div className="legend" aria-hidden="true">
+      <span><i style={{ background: "var(--adsum-ok)" }} /> Présents</span>
+      <span><i style={{ background: "var(--adsum-warn)" }} /> Partiels</span>
+      <span><i style={{ background: "var(--adsum-danger)" }} /> Absents</span>
     </div>
   );
 }
