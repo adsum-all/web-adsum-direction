@@ -4,7 +4,7 @@
 // the shape has to be true to the points, and the exact figure has to be one hover
 // away. A curve you can admire but not interrogate is decoration.
 
-import { useId, useMemo, useState } from "react";
+import { useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import { formatDateLongue, formatNombre, monotonePath, niceMax } from "./geometry.js";
 
@@ -32,14 +32,57 @@ interface TrendProps {
   maxForce?: number;
 }
 
-const M = { haut: 16, droite: 16, bas: 34, gauche: 46 };
-const L = 900;
+const M = { haut: 16, droite: 18, bas: 38, gauche: 50 };
+//: Fallback width, used only before the container has been measured once.
+const L_DEFAUT = 900;
+//: Rough width of one axis label, in pixels, at the size the stylesheet gives them.
+//: Used to decide how many labels fit; measuring each one would cost a reflow per
+//: render for a decision that only needs to be approximately right.
+const LARGEUR_ETIQUETTE = 58;
+
+/** The rendered width of the chart, so the viewBox maps one unit to one pixel.
+ *
+ * With a fixed viewBox and preserveAspectRatio="none" the whole drawing is stretched
+ * to fit, text included: labels came out horizontally squashed on a narrow screen and
+ * stretched on a wide one. Measuring means no scaling at all, so text renders at its
+ * true size and label collision can be computed rather than guessed.
+ */
+function useLargeur(): [React.RefObject<HTMLDivElement>, number] {
+  const ref = useRef<HTMLDivElement>(null);
+  const [largeur, setLargeur] = useState(L_DEFAUT);
+  useLayoutEffect(() => {
+    const noeud = ref.current;
+    if (!noeud) return undefined;
+    const mesurer = (): void => setLargeur(Math.max(320, Math.round(noeud.getBoundingClientRect().width)));
+    mesurer();
+    if (typeof ResizeObserver === "undefined") return undefined;
+    const observateur = new ResizeObserver(mesurer);
+    observateur.observe(noeud);
+    return () => observateur.disconnect();
+  }, []);
+  return [ref, largeur];
+}
+
+/** Where to put the tooltip so it stays inside the chart.
+ *
+ * Centred on the point, half of it falls outside near either edge and the reader loses
+ * the very figures the tooltip exists to show: the title and the first characters of
+ * each label were cut off on the left-hand points. Near a border it anchors to that
+ * border instead, and it never sits further than the plot itself.
+ */
+function ancrageInfobulle(x: number, largeur: number): React.CSSProperties {
+  const ratio = largeur > 0 ? x / largeur : 0.5;
+  if (ratio < 0.22) return { left: 0, transform: "none" };
+  if (ratio > 0.78) return { right: 0, left: "auto", transform: "none" };
+  return { left: `${ratio * 100}%`, transform: "translateX(-50%)" };
+}
 
 export function TrendChart({
   libelles, titres, dates, series, hauteur = 260, unite, messageVide, maxForce,
 }: TrendProps): JSX.Element {
   const idGradient = useId();
   const [survol, setSurvol] = useState<number | null>(null);
+  const [conteneur, L] = useLargeur();
 
   const n = libelles.length;
   const geo = useMemo(() => {
@@ -57,23 +100,27 @@ export function TrendChart({
     const x = (i: number) => (n <= 1 ? M.gauche + largeurTrace / 2 : M.gauche + (largeurTrace * i) / (n - 1));
     const y = (v: number) => M.haut + hauteurTrace - (hauteurTrace * Math.max(0, v)) / (echelle.max || 1);
     return { echelle, x, y, hauteurTrace, largeurTrace };
-  }, [series, n, hauteur, maxForce]);
+  }, [series, n, hauteur, maxForce, L]);
 
-  // Axis labels thin out rather than overlap: past a dozen points, every label drawn
-  // is a label unread.
-  const pas = Math.max(1, Math.ceil(n / 8));
+  // How many labels the axis can actually hold, from its measured width rather than a
+  // fixed count. Eight labels fit comfortably on a wide screen and collide on a narrow
+  // one, and two labels touching are worse than one label missing.
+  const pas = useMemo(() => {
+    const tiennent = Math.max(2, Math.floor(geo.largeurTrace / LARGEUR_ETIQUETTE));
+    return Math.max(1, Math.ceil(n / tiennent));
+  }, [n, geo.largeurTrace]);
 
   const vide = n === 0 || series.length === 0;
 
   return (
-    <div className="graphe" role="img" aria-label={messageVide && vide ? messageVide : "Graphique d'évolution"}>
+    <div className="graphe" ref={conteneur} role="img" aria-label={messageVide && vide ? messageVide : "Graphique d'évolution"}>
       {vide ? (
         <p className="graphe-vide">{messageVide ?? "Aucune donnée sur la période retenue."}</p>
       ) : (
         <>
           <svg
             viewBox={`0 0 ${L} ${hauteur}`}
-            preserveAspectRatio="none"
+            preserveAspectRatio="xMidYMid meet"
             className="graphe-svg"
             onMouseLeave={() => setSurvol(null)}
           >
@@ -142,7 +189,13 @@ export function TrendChart({
 
             {libelles.map((lb, i) => (
               i % pas === 0 ? (
-                <text key={i} x={geo.x(i)} y={hauteur - 12} className="graphe-axe" textAnchor="middle">
+                <text
+                  key={i}
+                  x={geo.x(i)}
+                  y={hauteur - 14}
+                  className="graphe-axe"
+                  textAnchor={i === 0 ? "start" : i >= n - 1 ? "end" : "middle"}
+                >
                   {lb}
                 </text>
               ) : null
@@ -166,7 +219,7 @@ export function TrendChart({
           {survol != null && (
             <div
               className="graphe-infobulle"
-              style={{ left: `${(geo.x(survol) / L) * 100}%` }}
+              style={ancrageInfobulle(geo.x(survol), L)}
               role="status"
             >
               <p className="graphe-infobulle-titre">{titres?.[survol] ?? libelles[survol]}</p>

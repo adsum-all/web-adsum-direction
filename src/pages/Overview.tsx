@@ -50,8 +50,22 @@ export function OverviewPage({ onNavigate }: { onNavigate: (r: RouteKey) => void
     titres: points.map((p) => p.titre),
     dates: points.map((p) => p.date),
     series: [
-      { cle: "presence", label: "Taux de présence", couleur: couleur(0), valeurs: points.map((p) => p.taux_presence), aire: true },
-      { cle: "participation", label: "Taux de suivi (présents et partiels)", couleur: couleur(1), valeurs: points.map((p) => p.taux_participation) },
+      // The names say the inclusion out loud. Somebody on site has followed, so the
+      // lower curve is contained in the upper one: calling them "présence" and "suivi"
+      // read as two competing measures of the same thing.
+      {
+        cle: "presence",
+        label: "Venus sur place",
+        couleur: couleur(0),
+        valeurs: points.map((p) => p.taux_presence),
+        aire: true,
+      },
+      {
+        cle: "participation",
+        label: "Ont suivi, sur place ou à distance",
+        couleur: couleur(1),
+        valeurs: points.map((p) => p.taux_participation),
+      },
     ],
   }), [points]);
 
@@ -96,7 +110,7 @@ export function OverviewPage({ onNavigate }: { onNavigate: (r: RouteKey) => void
           ) : (
             <>
               <Kpi
-                label="Taux de suivi"
+                label="Part qui a suivi"
                 value={s?.taux_participation}
                 suffix="%"
                 accent
@@ -189,12 +203,12 @@ export function OverviewPage({ onNavigate }: { onNavigate: (r: RouteKey) => void
       )}
 
       <ChartCard
-        title="Évolution de la présence, activité par activité"
+        title="Suivi des activités, l'une après l'autre"
         hint={<>{points.length} activité{points.length > 1 ? "s" : ""} sur le périmètre filtré</>}
         info={{
-          measure: "Taux de présence et taux de suivi pour chaque activité, dans l'ordre chronologique.",
-          formula: "Par activité : présents / observations, et (présents + partiels) / observations.",
-          limits: "Un point par activité, sans lissage mensuel : une assemblée et une réunion hebdomadaire ne sont pas moyennées ensemble.",
+          measure: "Pour chaque activité, la part des membres attendus qui sont venus sur place, et la part de ceux qui l'ont suivie par un moyen ou un autre.",
+          formula: "Venus sur place = présentiel / attendus. Ont suivi = (présentiel + à distance) / attendus. La première courbe est toujours sous la seconde : venir sur place, c'est suivre.",
+          limits: "Un point par activité, sans lissage mensuel : une assemblée et une réunion hebdomadaire ne sont pas moyennées ensemble. L'écart entre les deux courbes est exactement le suivi à distance.",
         }}
       >
         {serie.loading && !serie.data
@@ -208,10 +222,10 @@ export function OverviewPage({ onNavigate }: { onNavigate: (r: RouteKey) => void
               {points.length > 0 && (
                 <ExportBar
                   titre="Évolution de la présence"
-                  colonnes={["Date", "Activité", "Volet", "Présents", "Partiels", "Absents", "Total", "Taux de présence"]}
+                  colonnes={["Date", "Activité", "Volet", "Sur place", "À distance", "N'ont pas suivi", "Attendus", "Part venue sur place"]}
                   lignesTableau={points.map((p) => [
-                    p.date?.slice(0, 10) ?? "", p.titre, p.volet, String(p.presents),
-                    String(p.partiels), String(p.absents), String(p.total), `${p.taux_presence} %`,
+                    p.date?.slice(0, 10) ?? "", p.titre, p.volet, String(p.presentiel),
+                    String(p.en_ligne), String(p.absents), String(p.total), `${p.taux_presence} %`,
                   ])}
                   filtres={filtres.filtres}
                   cibleImage={() => document.querySelector<SVGSVGElement>("#courbe-presence svg.graphe-svg")}

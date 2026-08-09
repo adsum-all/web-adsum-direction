@@ -193,8 +193,10 @@
 .graphe-infobulle {
   position: absolute;
   top: 6px;
-  transform: translateX(-50%);
   min-width: 170px;
+  /* Never wider than the chart, and long titles wrap instead of pushing the box out
+     of the card. An activity name can be forty characters. */
+  max-width: min(300px, 92%);
   padding: 9px 11px;
   border: 1px solid var(--adsum-line);
   border-radius: var(--adsum-radius-md);
@@ -204,11 +206,11 @@
   z-index: 3;
 }
 
-.graphe-infobulle-titre { margin: 0; font-size: var(--adsum-text-sm, 13px); font-weight: 600; color: var(--adsum-ink); }
+.graphe-infobulle-titre { margin: 0; font-size: var(--adsum-text-sm, 13px); font-weight: 600; color: var(--adsum-ink); overflow-wrap: anywhere; }
 .graphe-infobulle-date { margin: 2px 0 6px; font-size: 11px; color: var(--adsum-faint); }
 .graphe-infobulle ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; }
 .graphe-infobulle li { display: flex; align-items: center; gap: 7px; font-size: 12px; }
-.graphe-infobulle-label { color: var(--adsum-mut); }
+.graphe-infobulle-label { color: var(--adsum-mut); overflow-wrap: anywhere; }
 .graphe-infobulle-valeur { margin-left: auto; font-weight: 600; font-variant-numeric: tabular-nums; }
 
 .graphe-puce { width: 9px; height: 9px; border-radius: 3px; flex: none; }
@@ -340,6 +342,7 @@
 .pastille-present { background: var(--adsum-ok); }
 .pastille-partiel { background: var(--adsum-warn); }
 .pastille-absent { background: var(--adsum-line); }
+.pastille-inconnu { background: var(--adsum-faint); }
 .pastille-marqueur { background: var(--adsum-acc); border-radius: 1px; width: 3px; height: 12px; }
 
 .classement-liste { display: grid; gap: 7px; }
@@ -374,6 +377,7 @@
 .seg-present { background: var(--adsum-ok); }
 .seg-partiel { background: var(--adsum-warn); }
 .seg-absent { background: #cfd6e4; }
+.seg-inconnu { background: var(--adsum-faint); }
 
 /* The rate marker sits on the bar rather than beside it, so volume and rate are read
    in one glance instead of two. */
@@ -696,3 +700,15 @@
 .pagination-boutons button:hover:not(:disabled) { border-color: var(--adsum-acc); color: var(--adsum-acc); }
 .pagination-boutons button:disabled { opacity: 0.45; cursor: not-allowed; }
 .pagination-page { color: var(--adsum-mut); padding: 0 4px; font-size: var(--adsum-text-xs, 12px); font-variant-numeric: tabular-nums; }
+
+/* The ranking grid has two fixed numeric columns; below this width they push the
+   label out of the card instead of shrinking. The label moves onto its own line. */
+@media (max-width: 720px) {
+  .classement-ligne {
+    grid-template-columns: 1fr 58px 50px;
+    grid-template-areas: "nom nom nom" "piste total taux";
+    row-gap: 4px;
+  }
+  .classement-nom { grid-area: nom; }
+  .classement-piste { grid-area: piste; }
+}

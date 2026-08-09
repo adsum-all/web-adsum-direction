@@ -34,7 +34,12 @@ export interface Synthese {
   activites: number;
   membres_vus: number;
   membres_actifs: number;
+  /** On site. The word "présence" means this axis and nothing else: somebody who
+   *  followed online followed, they were not present. */
   presents: number;
+  presentiel: number;
+  /** Followed online without coming. presentiel + en_ligne + inconnu = suivis. */
+  en_ligne: number;
   partiels: number;
   absents: number;
   scannes: number;
@@ -48,7 +53,11 @@ export interface Synthese {
   /** Rows the old model cannot express. Excluded from every rate, counted here so
    *  the exclusion is visible rather than silent. */
   non_interpretables: number;
+  /** Share of the expected who came on site. Always below taux_suivi, which contains it. */
   taux_presence: number;
+  taux_presence_physique: number;
+  /** Share of the expected who followed, by any channel. */
+  taux_suivi: number;
   taux_participation: number;
   /** Share of the attendance that is evidence rather than assertion. */
   taux_preuve: number;
@@ -58,6 +67,8 @@ export interface Synthese {
 
 export interface LigneRepartition {
   label: string;
+  /** Followed, by any channel. suivis + absents = total. */
+  suivis: number;
   presents: number;
   partiels: number;
   absents: number;
@@ -74,8 +85,12 @@ export interface LigneRepartition {
   en_ligne_partiel: number;
   suivi_modalite_inconnue: number;
   non_interpretables: number;
+  en_ligne_sans_degre: number;
   taux_presence: number;
+  taux_presence_physique: number;
+  taux_suivi: number;
   taux_participation: number;
+  taux_a_distance: number;
   taux_absence: number;
   taux_preuve: number;
 }
@@ -91,13 +106,21 @@ export interface PointSerie {
   titre: string;
   date: string | null;
   volet: string;
+  /** Followed, by any channel. presentiel + en_ligne + canal_inconnu = suivis. */
+  suivis: number;
+  /** On site. This, and only this, is what "présence" means. */
+  presentiel: number;
+  /** Followed online without coming. The gap between the two curves is exactly this. */
+  en_ligne: number;
+  canal_inconnu: number;
+  /** Alias of presentiel, kept while the screens migrate. */
   presents: number;
   partiels: number;
   absents: number;
   total: number;
   scannes: number;
-  en_ligne: number;
   taux_presence: number;
+  taux_suivi: number;
   taux_participation: number;
 }
 
