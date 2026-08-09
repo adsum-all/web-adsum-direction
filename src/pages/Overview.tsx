@@ -74,7 +74,7 @@ export function OverviewPage({ onNavigate }: { onNavigate: (r: RouteKey) => void
     titres: points.map((p) => p.titre),
     dates: points.map((p) => p.date),
     series: [
-      { cle: "presents", label: "Présents", couleur: couleur(1), valeurs: points.map((p) => p.presents), aire: true },
+      { cle: "presents", label: "Venus sur place", couleur: couleur(1), valeurs: points.map((p) => p.presentiel), aire: true },
       { cle: "enligne", label: "Dont en ligne", couleur: couleur(4), valeurs: points.map((p) => p.en_ligne) },
       { cle: "absents", label: "Absents", couleur: couleur(5), valeurs: points.map((p) => p.absents) },
     ],

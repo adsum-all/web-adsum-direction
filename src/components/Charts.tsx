@@ -423,11 +423,11 @@ export function StackedBar({ presents, partiels, absents, height = 10 }: {
     <div
       className="stacked-bar"
       role="img"
-      aria-label={`Présents ${presents}, partiels ${partiels}, absents ${absents}`}
+      aria-label={`Sur place ${presents}, à distance ${partiels}, n'ont pas suivi ${absents}`}
       style={{ display: "flex", height, borderRadius: 6, overflow: "hidden", background: "var(--adsum-line)" }}
     >
-      {seg(presents, "var(--adsum-ok)", "Présents")}
-      {seg(partiels, "var(--adsum-warn)", "Partiels")}
+      {seg(presents, "var(--adsum-ok)", "Venus sur place")}
+      {seg(partiels, "var(--adsum-warn)", "Ont suivi à distance")}
       {seg(absents, "var(--adsum-danger)", "Absents")}
     </div>
   );
