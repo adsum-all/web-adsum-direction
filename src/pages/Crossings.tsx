@@ -22,10 +22,10 @@ import { getCatalogue, getCroisement, getRepartition } from "../directionApi.js"
 import { useResource } from "../useResource.js";
 
 const MESURES = [
-  { cle: "presents", label: "Présents" },
-  { cle: "participants", label: "Présents et partiels" },
-  { cle: "absents", label: "Absents" },
-  { cle: "total", label: "Observations" },
+  { cle: "presents", label: "Venus sur place" },
+  { cle: "participants", label: "Ont suivi, sur place ou à distance" },
+  { cle: "absents", label: "N'ont pas suivi" },
+  { cle: "total", label: "Membres attendus" },
 ];
 
 export function CrossingsPage(): JSX.Element {
@@ -122,10 +122,14 @@ export function CrossingsPage(): JSX.Element {
           <>
             <ExportBar
               titre={`Répartition par ${dims.find((d) => d.cle === lignes)?.libelle ?? lignes}`}
-              colonnes={["Entité", "Présents", "Partiels", "Absents", "Total", "Taux de suivi"]}
+              colonnes={["Entité", "Sur place", "À distance", "N'ont pas suivi", "Attendus", "Part qui a suivi"]}
               lignesTableau={repartition.data.map((r) => [
-                r.label, String(r.presents), String(r.partiels), String(r.absents),
-                String(r.total), `${r.taux_participation} %`,
+                // The columns name the channel axis, so they must read the channel
+                // fields. "partiels" holds only the partial online follow-ups, so a
+                // column headed "à distance" fed from it under-reported by everyone
+                // who followed online in full.
+                r.label, String(r.presentiel), String(r.en_ligne), String(r.absents),
+                String(r.total), `${r.taux_suivi} %`,
               ])}
               filtres={filtres.filtres}
             />

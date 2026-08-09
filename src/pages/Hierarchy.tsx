@@ -209,7 +209,7 @@ function ParEchelon({ token, etat }: { token: string; etat: ReturnType<typeof us
           <>
             <ExportBar
               titre="Assiduité par échelon"
-              colonnes={["Niveau", "Entité", "Présents", "Partiels", "Absents", "Total", "Taux de suivi"]}
+              colonnes={["Niveau", "Entité", "Sur place", "À distance", "N'ont pas suivi", "Attendus", "Part qui a suivi"]}
               lignesTableau={lignesPlates}
               filtres={etat.filtres}
             />
@@ -227,8 +227,8 @@ function aplatir(noeuds: Noeud[], prefixe = ""): string[][] {
   return noeuds.flatMap((n) => {
     const nom = prefixe ? `${prefixe} > ${n.label}` : n.label;
     const ligne = [
-      n.niveau, nom, String(n.presents), String(n.partiels), String(n.absents),
-      String(n.total), `${n.taux_participation} %`,
+      n.niveau, nom, String(n.presentiel), String(n.en_ligne), String(n.absents),
+                String(n.total), `${n.taux_suivi} %`,
     ];
     return [ligne, ...aplatir(n.enfants ?? [], nom)];
   });

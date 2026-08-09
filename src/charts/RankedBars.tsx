@@ -21,6 +21,12 @@ export interface Ligne {
   total: number;
   taux_presence: number;
   taux_participation: number;
+  /** On site. The stacked bar's first segment. */
+  presentiel: number;
+  /** Followed online without coming. Second segment. */
+  en_ligne: number;
+  /** Followed, channel unrecorded. Counted apart so the bar still fills. */
+  suivi_modalite_inconnue: number;
 }
 
 type Tri = "volume" | "taux_bas" | "taux_haut" | "alpha";
@@ -88,10 +94,10 @@ export function RankedBars({
           ))}
         </div>
         <ul className="classement-legende">
-          <li><span className="pastille pastille-present" aria-hidden="true" />Présents</li>
-          <li><span className="pastille pastille-partiel" aria-hidden="true" />Partiels</li>
-          <li><span className="pastille pastille-absent" aria-hidden="true" />Absents</li>
-          <li><span className="pastille pastille-marqueur" aria-hidden="true" />Taux de suivi</li>
+          <li><span className="pastille pastille-present" aria-hidden="true" />Venus sur place</li>
+          <li><span className="pastille pastille-partiel" aria-hidden="true" />Ont suivi à distance</li>
+          <li><span className="pastille pastille-absent" aria-hidden="true" />N&apos;ont pas suivi</li>
+          <li><span className="pastille pastille-marqueur" aria-hidden="true" />Part qui a suivi</li>
         </ul>
       </div>
 
@@ -105,8 +111,13 @@ export function RankedBars({
               <span className="classement-nom" title={l.label}>{l.label}</span>
               <span className="classement-piste">
                 <span className="classement-barre-empilee" style={{ width: `${largeur}%` }}>
-                  <span className="seg seg-present" style={{ width: `${part(l.presents)}%` }} />
-                  <span className="seg seg-partiel" style={{ width: `${part(l.partiels)}%` }} />
+                  {/* The three segments are the two channels plus the non-follows, so
+                      they fill the bar exactly. Using "partiels" for the middle one left
+                      out everyone who followed online in full, and the bar stopped short
+                      of its own total without saying why. */}
+                  <span className="seg seg-present" style={{ width: `${part(l.presentiel)}%` }} />
+                  <span className="seg seg-partiel" style={{ width: `${part(l.en_ligne)}%` }} />
+                  <span className="seg seg-inconnu" style={{ width: `${part(l.suivi_modalite_inconnue)}%` }} />
                   <span className="seg seg-absent" style={{ width: `${part(l.absents)}%` }} />
                 </span>
                 <span
