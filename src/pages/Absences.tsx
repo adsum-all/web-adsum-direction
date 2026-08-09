@@ -16,16 +16,19 @@ export function AbsencesPage(): JSX.Element {
   const { participation, reloadAll, isRefreshing, lastUpdate } = useDirection();
   const events = participation.data?.serie_evenements ?? [];
 
+  // Summed on the channel axis. Adding "presents" and "partiels" left out everyone who
+  // followed online in full, so the denominator was short and the absence rate too high.
   const totals = useMemo(() => events.reduce(
     (acc, e) => ({
-      presents: acc.presents + e.presents,
-      partiels: acc.partiels + e.partiels,
+      presents: acc.presents + e.presentiel,
+      en_ligne: acc.en_ligne + e.en_ligne,
+      suivis: acc.suivis + e.suivis,
       absents: acc.absents + e.absents,
     }),
-    { presents: 0, partiels: 0, absents: 0 },
+    { presents: 0, en_ligne: 0, suivis: 0, absents: 0 },
   ), [events]);
 
-  const totalPointages = totals.presents + totals.partiels + totals.absents;
+  const totalPointages = totals.suivis + totals.absents;
   const tauxAbsence = totalPointages > 0
     ? Math.round((totals.absents / totalPointages) * 100)
     : null;
@@ -97,8 +100,8 @@ export function AbsencesPage(): JSX.Element {
                   centerLabel="pointages"
                   unit="pointages"
                   segments={[
-                    { label: "Présents", value: totals.presents },
-                    { label: "Partiels", value: totals.partiels },
+                    { label: "Venus sur place", value: totals.presents },
+                    { label: "Ont suivi à distance", value: totals.en_ligne },
                     { label: "Absents", value: totals.absents },
                   ]}
                 />

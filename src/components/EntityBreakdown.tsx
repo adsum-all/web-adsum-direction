@@ -99,8 +99,8 @@ export function EntityBreakdown({
             <tr>
               {th("label", dimensionLabel)}
               {th("total", "Pointages")}
-              {th("presents", "Présents")}
-              <th>Partiels</th>
+              {th("presents", "Sur place")}
+              <th>À distance</th>
               {th("absents", "Absents")}
               {th("assiduite", "Assiduité")}
               {th("mobilisation", "Mobilisation")}
@@ -150,7 +150,7 @@ function RateBadge({ value, kind }: { value: number | null; kind: "assiduite" | 
   if (value === null) return <span className="rate-badge rate-na">-</span>;
   const tone = value >= 75 ? "rate-good" : value >= 50 ? "rate-mid" : "rate-low";
   return (
-    <span className={`rate-badge ${tone}`} title={kind === "assiduite" ? "Présents / pointages" : "(Présents + 0,5·Partiels) / pointages"}>
+    <span className={`rate-badge ${tone}`} title={kind === "assiduite" ? "Venus sur place / occasions attendues" : "Ont suivi / occasions attendues"}>
       {value}%
     </span>
   );

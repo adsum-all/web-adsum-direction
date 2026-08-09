@@ -129,8 +129,8 @@ export function LiveActivityPage(): JSX.Element {
                             centerLabel="pointages"
                             unit="membres"
                             segments={[
-                              { label: "Présents", value: currentEvent.presents },
-                              { label: "Partiels", value: currentEvent.partiels },
+                              { label: "Venus sur place", value: currentEvent.presents },
+                              { label: "Ont suivi à distance", value: currentEvent.partiels },
                               { label: "Absents", value: currentEvent.absents },
                             ]}
                           />
