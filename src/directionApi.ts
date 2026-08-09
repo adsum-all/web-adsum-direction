@@ -276,3 +276,19 @@ export interface Connexion {
 
 export const getMesConnexions = (t: string) =>
   lire<Connexion[]>(t, "/api/v1/membres/me/connexions");
+
+/** Arrival times actually recorded for one activity, bucketed by quarter hour.
+ *
+ * `disponible` is false when the recorded times carry no spread; `motif` then says why,
+ * and the screen states it instead of drawing a curve over a single instant.
+ */
+export interface Arrivees {
+  disponible: boolean;
+  motif: string | null;
+  total?: number;
+  tranches: { minutes: number; libelle: string; arrivees: number; cumul: number; part_cumulee: number }[];
+}
+
+export function getArrivees(token: string, evenementId: string): Promise<Arrivees> {
+  return lire<Arrivees>(token, `/api/v1/direction/activites/${evenementId}/arrivees`);
+}
